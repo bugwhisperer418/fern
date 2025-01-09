@@ -6,24 +6,24 @@ Fern has support for daily Journals (think a Engineer's log), Templates, and Boo
 
 ## Installing Fern
 1. Clone this repo.
-```sh
-git clone https://git.sr.ht/~bugwhisperer/fern
-```
+    ```sh
+    git clone https://git.sr.ht/~bugwhisperer/fern
+    ```
 2. Change into this repo directory.
-```sh
-cd fern
-```
-4. Run the `install.sh` script
-```sh
-./install.sh
-```
-5. Setup a new Fern Vault.
-```sh
-fern vault create <path-to-vault-folder>
-```
+    ```sh
+    cd fern
+    ```
+3. Run the `install.sh` script
+    ```sh
+    ./install.sh
+    ```
+4. Setup a new Fern Vault.
+    ```sh
+    fern vault create <path-to-vault-folder>
+    ```
 
 ## Using Fern
-After installing fern, run `fern help` or, if you opt to install the manpage documentation, `man fern` for more guidance on using fern.
+After installing fern, run `fern help` or the manpage documentation (you _did_ install the manpage, didn't you?), `man fern` for more guidance on using fern.
 
 ## Found a bug? Feature idea?
 Please open any tickets for bugs found or feature requests here: [https://todo.sr.ht/~bugwhisperer/Fern-Issues](https://todo.sr.ht/~bugwhisperer/Fern-Issues).
