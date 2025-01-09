@@ -1,0 +1,263 @@
+.\" Manpage for fern.
+.\" Contact andie@bugwhisperer.dev to correct errors or typos.
+.TH FERN 1 "09 Jan 2024" "0.0.7" "FERN MANUAL"
+
+.SH NAME
+fern \- a knowledge management system
+
+.SH SYNOPSIS
+fern COMMAND [ACTION [ARGS...]]
+
+.SH DESCRIPTION
+.B fern
+is a swiss-army knife for your notetaking and personal knowledge management.
+Fern is a helpful commandline tool to manage, curate, and search a vault of your personal notes.
+It offers an alternative to heavier GUI personal notetaking management applications for systems that are resource constrained or for users that value the privacy and security of their data.
+.PP
+Fern uses markdown for all Notes, Templates, and Journal records.
+Users are NOT required to pass the '.md' extension when referencing the name of a given Note/Journal/Template as an parameter argument, as Fern will check for and append it, if needed.
+.PP
+.I NOTE:
+Fern requires the environment variable \fB$FERN_VAULT\fR to be assessable and set as the valid, existing path to your Fern vault before it is able to run commands (other than help-related ones).
+
+.SH COMMANDS
+.SS
+.I help
+View basic information and guidance on using Fern quickly from the commandline.
+.TP
+.B ACTIONS
+.TP
+~~ NONE ~~
+
+.SS
+.I vault
+Main folder that holds all Fern records.
+.TP
+.B ACTIONS
+.TP
+create <path>
+.RS
+Sets up a new Fern Vault.
+.I NOTE:
+The <path> argument folder for the new Vault must not already exist.
+.RE
+
+.TP
+stat
+.RS
+Get a list of stats for Fern Vault like qty of records per area.
+.RE
+
+.SS
+.I bookmark
+View and manage Bookmarks of Notes.
+.TP
+.B ACTIONS
+.TP
+list
+.RS
+Lists out all Bookmarks to std output.
+.RE
+
+.TP
+add <note_name>
+.RS
+Adds a single Note to Bookmarks. Note name passed must exist in the Notes folder.
+.RE
+
+.TP
+del <note_name>
+.RS
+Removes a single Note from Bookmarks.
+.RE
+
+.SS
+.I journal
+Keep and view daily Journal entries, separate from Notes (which may represent long-term projects/idea).
+.TP
+.B ACTIONS
+.TP
+open {yesterday|today|tomorrow|<YYYY-MM-DD>}
+.RS
+Opens a Journal entry for a specific date. Creates one of that date's Journal does not exist yet.
+.RE
+
+.TP
+find <pattern>
+.RS
+Searches through Journal entries for matches to a given RegEx pattern.
+.RE
+
+.SS
+.I note
+Note records form the core of the knowledge base, tracking projects, books, and more. It's an intentionally open-ended, flexible base to build off of.
+.TP
+.B ACTIONS
+.TP
+add <note_name> [<template_name>]
+.RS
+Creates a new Note with a given name.
+This action will abort if a Note already exists with the name provided.
+The name of an existing template can be passed to bootstrap the new note with its comtents.
+.RE
+
+.TP
+del <note_name>
+.RS
+Deletes a single note from the Notes folder, if found.
+All existing Notes,Journals,Bookmarks,Templates that have a link or reference to the deleted Note name will be updated to read "[!]".
+.RE
+
+.TP
+open <note_name>
+.RS
+Opens a single Note from the Notes folder, if found.
+.RE
+
+.TP
+move <old_note> <new_note>
+.RS
+Moves/Renames a single Note in the Notes folder from the old to the new name.
+All existing Notes,Journals,Bookmarks,Templates that have a link or reference to the moved Note's old name will be updated to the new name.
+This action will abort if a Note record already exists in the Notes folder with the provided new name.
+This was done a safety to keep users from accidentily overwriting notes.
+.RE
+
+.TP
+find <pattern> [--verbose]
+.RS
+Find Notes based on matching the provided search pattern (accepts RegEx).
+The '--verbose' flag returns Note snippets that matched, along with the filenames.
+Default is to only return filenames.
+.RE
+
+.SS
+.I template
+Templates serve as helpful blueprints to quickly spin up Notes and Journals. Saves from repeating same contents (like specific sets of headings and subheadings). The Template `daily-journal.md` is required to exist and is created as part of the Fern Vault setup process.
+.TP
+.B ACTIONS
+.TP
+list
+.RS
+Displays a list of all Templates in the Templates folder.
+.RE
+
+.TP
+add <template_name>
+.RS
+Creates a new Template with the given name.
+This action will abort if a Template already exists with the name provided.
+.RE
+
+.TP
+del <template_name>
+delete a Template
+.RS
+Deletes a single Template from the Templates folder, if found.
+.RE
+
+.TP
+open <template_name>
+.RS
+Opens a single Template from the Templates folder, if found.
+.RE
+
+.TP
+move <old_template> <new_template>
+.RS
+Moves/Renames a single Template in the Templates folder from the old to the new name.
+This action will abort if a Template record already exists in the Templates folder with the provided new name.
+This was done a safety to keep users from accidentily overwriting Templates.
+.RE
+
+.SH EXAMPLES
+Let's say you are a hard-working, organised PhD student in the venerable field of Foxology.
+
+.B Start your day off right with Fern!
+.PP
+You start your day with a strong cup of coffee, fire up your computer and want to take a few notes about some of the top To Do items you need to get done today.
+Command to use:
+.PP
+.nf
+.RS
+$ fern journal
+.RE
+.fi
+.PP
+This opens up the daily journal for the current day, creating it if it doesn't exist.
+It will be created with whatever is contained in the 'daily-journal' template file.
+This is a shortcut for: `fern journal open today`.
+
+.B Templating to save time
+.PP
+You know that you'll be needing to make a lot of Notes on various books for your research and want to save yourself from manually entering the same sections and headers in all those Notes.
+Command to use:
+.PP
+.nf
+.RS
+$ fern template add book-note
+.RE
+.fi
+.PP
+This creates a new Template file 'book-note' and opens it up to be populated.
+
+.B New Note from a Template
+.PP
+During your research you came across a book called, "The Habits of Foxes" that will be critical to your thesis that you want to capture this new information for later.
+Command to use:
+.PP
+.nf
+.RS
+$ fern note add "The Habits of Foxes" book-note
+.RE
+.fi
+.PP
+This will create and open a new Note file with the name 'The Habits of Foxes'. It will contain everything inside the Template file 'book-note'.
+
+.B Finding old notes
+.PP
+It's time to write that thesis paper, but your can't remember which of the hundreds of book notes that you made had that information on the habits of foxes.
+Command to use:
+.PP
+.nf
+.RS
+$ fern note find habits
+/home/andie/notes/2025-01-02
+/home/andie/notes/good-habits-tracking
+/home/andie/notes/The Habits of Foxes
+.RE
+.fi
+.PP
+Ah, there's the Note you needed on the last line!
+You can open it up with the command:
+.PP
+.nf
+.RS
+$ fern note open "The Habits of Foxes"
+.RE
+.fi
+
+.SH FILES
+$HOME/.local/bin/fern
+
+.SH LIMITATIONS
+.TP
+Cannot support multiple Fern vaults on a single system.
+
+.SH BUGS
+No known bugs.
+Please submit any bug reports to: https://todo.sr.ht/~bugwhisperer/fern-issues
+
+.SH AUTHOR
+Writen by Andie Keller (andie@bugwhisperer.dev).
+
+.SH COPYRIGHT
+.TP
+Copyright © 2025 Andie Keller.  License GPLv3+: GNU  GPL  version  3  or  later <https://gnu.org/licenses/gpl.html>.
+This is free software: you are free to change and redistribute it.
+There is NO WARRANTY.
+
+.SH SEE ALSO
+fern project page: https://sr.ht/~bugwhisperer/fern
+fern git repository: https://git.sr.ht/~bugwhisperer/fern
+
