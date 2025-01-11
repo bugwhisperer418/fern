@@ -242,7 +242,7 @@ process_journal() {
 			;;
 		*)
 			if date -d "$3" "+%Y-%m-%d" >/dev/null 2>&1; then
-				create_journal "$3.md";
+				create_journal "$3";
 			else
 				printf "Usage: fern journal open yesterday|today|tomorrow|<YYYY-MM-DD>";
 			fi
@@ -342,12 +342,12 @@ ext_checks() {
 
 # $1 - journal date;
 create_journal() {
-	if [ ! -e "$fJournals/$1.md" ]; then
-		cp "$dj" "$fJournals/$1.md";
-		sed --in-place "s/{{DATE}}/$1/g" "$fJournals/$1.md"
+	target=$(ext_checks "$fJournals/$1");
+	if [ ! -e "$target" ]; then
+		cp "$dj" "$target";
+		sed --in-place "s/{{DATE}}/$1/g" "$target"
 	fi
-	$EDITOR "$fJournals/$1.md";
-	exit 0;
+	$EDITOR "$target";
 }
 
 # $1 - old name; $2 - new name;
