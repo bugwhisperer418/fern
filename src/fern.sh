@@ -223,7 +223,7 @@ process_template() {
 
 # $1 - action; $2 - journal date | pattern string.;
 process_journal() {
-	if [ "$#" -lt 2 ]; then
+	if [ "$#" -eq 1 ]; then
 		# shortcut to create/open a new journal for today's date
 		create_journal "$(date +"%Y-%m-%d")";
 	fi
@@ -250,8 +250,12 @@ process_journal() {
 		esac
 		;;
 	find)
-		if [ "$#" -lt 4 ]; then cmd_usage "$1"; fi
-		find_items "$3" "$4" "$fJournals";
+		if [ "$#" -lt 3 ]; then cmd_usage "$1"
+		elif [ "$#" -eq 3 ]; then
+			find_items "$3" "$fJournals";
+		elif [ "$#" -eq 4 ]; then
+			find_items "$3" "$fJournals" "$4";
+		fi
 		;;
 	*)
 		cmd_usage "$1";
@@ -313,12 +317,11 @@ process_note() {
 		update_internal_links "$targetOld" "$targetNew";
 		;;
 	find)
-		if [ "$#" -lt 3 ]; then
-			cmd_usage "$1";
+		if [ "$#" -lt 3 ]; then cmd_usage "$1";
 		elif [ "$#" -eq 3 ]; then
-			find_items "$3" "" "$fNotes";
+			find_items "$3" "$fNotes";
 		elif [ "$#" -eq 4 ]; then
-			find_items "$3" "$4" "$fNotes";
+			find_items "$3" "$fNotes" "$4";
 		fi
 		;;
 	*)
@@ -365,12 +368,12 @@ update_internal_links() {
 	sed --in-place "s/$1/$2/g" "$fBookmarks"
 }
 
-# $1 - pattern; $2 - verbose flag; $3 - Folder of items to search over;
+# $1 - pattern; $2 - Folder of items to search over; $3 - verbose flag;
 find_items() {
-	if [ -n "$2" ] && [ "$2" = "--verbose" ]; then
-		grep  --dereference-recursive --line-number --ignore-case "$1" "$3" | sort | less;
+	if [ "$#" -eq 3 ] && [ "$3" = "--verbose" ]; then
+		find "$2" -name "*.md" -exec grep --dereference-recursive --line-number --ignore-case "$1" '{}' \+ | sort | less;
 	else
-		grep --dereference-recursive --line-number --ignore-case --files-with-matches "$1" "$3" | sort;
+		find "$2" -name "*.md" -exec grep --dereference-recursive --line-number --ignore-case --files-with-matches "$1" '{}' \+ | sort;
 	fi
 }
 
