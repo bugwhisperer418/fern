@@ -153,7 +153,7 @@ process_bookmark() {
 		;;
 	add)
 		if [ "$#" -ne 3 ]; then cmd_usage "$1"; fi
-		target=$(file_checks "$3" "Usage: fern bookmarks add <note_name>");
+		target=$(ext_checks "$3");
 		if [ ! -e "$fNotes/$target" ]; then
 			print_err "Error: Note not found with the name '$target'.";
 		elif [ "$(awk "/$target/" < "$fBookmarks" | wc --lines)" -eq 0 ]; then
@@ -163,7 +163,7 @@ process_bookmark() {
 		;;
 	del)
 		if [ "$#" -ne 3 ]; then cmd_usage "$1"; fi
-		target=$(file_checks "$3" "Usage: fern bookmarks del <note_name>");
+		target=$(ext_checks "$3");
 		mktemp -d -t "$temp";
 		trap '{ rm -f -- "$temp"; }' EXIT;
 		grep -xv "$target" "$fBookmarks" > "$temp" && mv "$temp" "$fBookmarks";
@@ -183,7 +183,7 @@ process_template() {
 		;;
 	open)
 		if [ "$#" -lt 3 ]; then cmd_usage "$1"; fi
-		target=$(file_checks "$3" "Usage: fern template open <template_name>");
+		target=$(ext_checks "$3");
 		if [ ! -e "$fTemplates/$target" ]; then
 			print_err "Error: Template not found with the name '$target'.";
 		fi
@@ -191,7 +191,7 @@ process_template() {
 		;;
 	add)
 		if [ "$#" -lt 3 ]; then cmd_usage "$1"; fi
-		target=$(file_checks "$3" "Usage: fern template add <template_name>");
+		target=$(ext_checks "$3");
 		if [ -e "$target" ]; then
 			print_err "Error: Template already exists with that name '$target'.";
 		fi
@@ -199,7 +199,7 @@ process_template() {
 		;;
 	del)
 		if [ "$#" -lt 3 ]; then cmd_usage "$1"; fi
-		target=$(file_checks "$3" "Usage: fern template del <template_name>");
+		target=$(ext_checks "$3");
 		if [ ! -e "$fTemplates/$target" ]; then
 			print_err "Error: Template not found with the name '$target'.";
 		fi
@@ -207,9 +207,9 @@ process_template() {
 		;;
 	move)
 		if [ "$#" -lt 3 ]; then cmd_usage "$1"; fi
-		oldT=$(file_checks "$3" "Usage: fern template move <old_template> <new_template>");
+		oldT=$(ext_checks "$3");
 		if [ "$#" -lt 4 ]; then cmd_usage "$1"; fi
-		newT=$(file_checks "$4" "Usage: fern template move <old_template> <new_template>");
+		newT=$(ext_checks "$4");
 		if [ ! -e "$fTemplates/$oldT" ]; then
 			print_err "Error: Template not found with the name '$oldT'.";
 		fi
@@ -269,7 +269,7 @@ process_note() {
 	case "$2" in
 	open)
 		if [ "$#" -lt 3 ]; then cmd_usage "$1"; fi
-		target=$(file_checks "$3" "Usage: fern note open <note_name>");
+		target=$(ext_checks "$3");
 		if [ ! -e "$fNotes/$target" ]; then
 			print_err "Error: Note not found with the name '$target'.";
 		fi
@@ -277,9 +277,9 @@ process_note() {
 		;;
 	add)
 		if [ "$#" -lt 3 ]; then cmd_usage "$1"; fi
-		targetF=$(file_checks "$3" "Usage: fern note add <note_name> [<template_name>]");
+		targetF=$(ext_checks "$3");
 		if [ "$#" -lt 4 ]; then cmd_usage "$1"; fi
-		targetT=$(file_checks "$4");
+		targetT=$(ext_checks "$4");
 		if [ -e "$fNotes/$targetF" ]; then
 			print_err "Error: Note already exists with the name '$targetF'.";
 		fi
@@ -294,7 +294,7 @@ process_note() {
 		;;
 	del)
 		if [ "$#" -lt 3 ]; then cmd_usage "$1"; fi
-		target="$(file_checks "$3" )";
+		target="$(ext_checks "$3" )";
 		if [ -e "$fNotes/$target" ]; then
 			rm -f "$fNotes/$target";
 			update_internal_links "$target" "\[!FILE REMOVED $target\]";
@@ -304,9 +304,9 @@ process_note() {
 		;;
 	move)
 		if [ "$#" -lt 3 ]; then cmd_usage "$1"; fi
-		targetOld=$(file_checks "$3" "Usage: fern note move <old_note> <new_note>");
+		targetOld=$(ext_checks "$3");
 		if [ "$#" -lt 4 ]; then cmd_usage "$1"; fi
-		targetNew=$(file_checks "$4" "Usage: fern note move <old_note> <new_note>");
+		targetNew=$(ext_checks "$4");
 		if [ ! -e "$fNotes/$targetOld" ]; then
 			print_err "Error: Note not found with the name '$targetOld'.";
 		fi
@@ -330,22 +330,13 @@ process_note() {
 	esac
 }
 
-# $1 - filename; [ $2 - usage error message; ]
-file_checks() {
-	# if not defined/empty,
-	if [ -z "$1" ]; then
-		# if usage notice exists, display notice and stop
-		if [ -n "$2" ]; then
-			printf "%s\n" "$2";
-			exit 0;
-		fi
-		# else spit back the arg
-		printf "%s" "$1";
-	# check if ends in '.md' and append if not passed
-	elif [[ "$1" == *.md ]]; then
-		printf "%s" "$1";
+# $1 - filename;
+ext_checks() {
+	# if not defined/empty OR check if ends in '.md'
+	if [ -z "$1" ] || [[ "$1" == *.md ]]; then
+		printf "%s" "$1"; # spit back as is
 	else
-		printf "%s.md" "$1";
+		printf "%s.md" "$1"; # append if not passed
 	fi
 }
 
