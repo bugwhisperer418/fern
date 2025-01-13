@@ -226,10 +226,11 @@ process_journal() {
 	if [ "$#" -eq 1 ]; then
 		# shortcut to create/open a new journal for today's date
 		create_journal "$(date +"%Y-%m-%d")";
+	elif [ "$#" -lt 3 ]; then
+		cmd_usage "$1";
 	fi
 	case "$2" in
 	open)
-		if [ "$#" -lt 3 ]; then cmd_usage "$1"; fi
 		case "$3" in
 		today)
 			create_journal "$(date +"%Y-%m-%d")";
@@ -250,8 +251,7 @@ process_journal() {
 		esac
 		;;
 	find)
-		if [ "$#" -lt 3 ]; then cmd_usage "$1"
-		elif [ "$#" -eq 3 ]; then
+		if [ "$#" -eq 3 ]; then
 			find_items "$3" "$fJournals";
 		elif [ "$#" -eq 4 ]; then
 			find_items "$3" "$fJournals" "$4";
@@ -348,6 +348,7 @@ create_journal() {
 		sed --in-place "s/{{DATE}}/$1/g" "$target"
 	fi
 	$EDITOR "$target";
+	exit 0;
 }
 
 # $1 - old name; $2 - new name;
