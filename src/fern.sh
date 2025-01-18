@@ -278,12 +278,12 @@ process_note() {
 	add)
 		if [ "$#" -lt 3 ]; then cmd_usage "$1"; fi
 		targetF=$(ext_checks "$3");
-		if [ "$#" -lt 4 ]; then cmd_usage "$1"; fi
-		targetT=$(ext_checks "$4");
 		if [ -e "$fNotes/$targetF" ]; then
 			print_err "Error: Note already exists with the name '$targetF'.";
 		fi
-		if [ -n "$targetT" ]; then
+		# optional starting template provided
+		if [ "$#" -eq 4 ]; then
+			targetT=$(ext_checks "$4");
 			if [ ! -e "$fTemplates/$targetT" ]; then
 				print_err "Error: Template not found with the name '$targetT'.";
 			fi
