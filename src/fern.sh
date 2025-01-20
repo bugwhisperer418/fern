@@ -8,7 +8,7 @@ set -o nounset;		# abort on unbound variable
 #}}}
 
 #{{{ Variables
-fVersion="0.0.8";
+fVersion="0.0.9";
 readonly fVersion;
 
 if [[ ${FERN_VAULT:-"unset"} != "unset" ]]; then
@@ -269,9 +269,23 @@ process_note() {
 	case "$2" in
 	open)
 		if [ "$#" -lt 3 ]; then cmd_usage "$1"; fi
+		# try to open a note with the exact name provided first
 		target=$(ext_checks "$3");
 		if [ ! -e "$fNotes/$target" ]; then
-			print_err "Error: Note not found with the name '$target'.";
+			# search for the note by name given in other files
+			hits=$(find_items "$3" "$fNotes");
+			lines=$(echo "$hits" | wc -l);
+			chars=$(echo "$hits" | wc -m);
+			printf "Error: Note not found with the name '%s'.\n" "$target";
+			if [ $lines -eq 1 ] && [ $chars -gt 1 ]; then
+				# if only 1 search record returned, open it
+				$EDITOR "$hits";
+				exit 0;
+			elif [ $lines -gt 1 ]; then
+				# if more than 1 record, display possible files of interest to user
+				printf "Several possible files of interest were found:\n%s\n" "$hits";
+			fi
+			exit 1;
 		fi
 		$EDITOR "$fNotes/$target";
 		;;
@@ -345,7 +359,7 @@ create_journal() {
 	target=$(ext_checks "$fJournals/$1");
 	if [ ! -e "$target" ]; then
 		cp "$dj" "$target";
-		sed --in-place "s/{{DATE}}/$1/g" "$target"
+		sed --in-place "s/{{DATE}}/$1/g" "$target";
 	fi
 	$EDITOR "$target";
 	exit 0;
@@ -354,10 +368,10 @@ create_journal() {
 # $1 - old name; $2 - new name;
 update_internal_links() {
 	# update internal links in all Notes, Journals, Templates and Bookmarks
-	find "$fNotes" -type f -print0 | xargs -0 sed --in-place "s/$1/$2/g"
-	find "$fJournals" -type f -print0 | xargs -0 sed --in-place "s/$1/$2/g"
-	find "$fTemplates" -type f -print0 | xargs -0 sed --in-place "s/$1/$2/g"
-	sed --in-place "s/$1/$2/g" "$fBookmarks"
+	find "$fNotes" -type f -print0 | xargs -0 sed --in-place "s/$1/$2/g";
+	find "$fJournals" -type f -print0 | xargs -0 sed --in-place "s/$1/$2/g";
+	find "$fTemplates" -type f -print0 | xargs -0 sed --in-place "s/$1/$2/g";
+	sed --in-place "s/$1/$2/g" "$fBookmarks";
 }
 
 # $1 - pattern; $2 - Folder of items to search over; $3 - verbose flag;
