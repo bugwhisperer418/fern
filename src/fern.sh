@@ -1,6 +1,6 @@
 #! /usr/bin/env bash
 #
-# Author: Andie Keller <andie@bugehisperer.dev>
+# Author: Andie Keller <andie@bugwhisperer.dev>
 
 #{{{ Shell settings
 set -o errexit;		# abort on nonzero exitstatus
