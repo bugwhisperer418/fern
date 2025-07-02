@@ -8,7 +8,7 @@ set -o nounset;		# abort on unbound variable
 #}}}
 
 #{{{ Variables
-fVersion="0.1.1";
+fVersion="0.1.2";
 readonly fVersion;
 
 if [[ ${FERN_VAULT:-"unset"} != "unset" ]]; then
@@ -241,6 +241,21 @@ process_journal() {
 		cmd_usage "$1";
 	fi
 	case "$2" in
+	review)
+		# open previous monthly log & all of it's weekly logs
+		local dt_start=$(date --date="1 month ago" +"%Y-%m-01")
+		local dt_end=$(date --date="$dt_start +1 months -1 days" +"%Y-%m-%d")
+		local files="$fJournals/$(date -d "$dt_start" +"%Y/%m")/monthly.log"
+		while [[ "$dt_start" < "$dt_end" ]]; do
+			# get the monday of the week
+			local monday=$(get_week_monday $(date --date="$dt_start" +"%Y-%m-%d"))
+			# add week log file to string
+			files="$files $fJournals/$(date -d "$monday" +"%Y/%m/wk%V").log";
+			# set start date to next week
+			dt_start=$(date --date="$dt_start +1 weeks" +"%Y-%m-%d")
+		done
+		$EDITOR -O $files
+		;;
 	open)
 		if [ "$#" -ne 3 ]; then
 			cmd_usage "$1";
