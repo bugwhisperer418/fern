@@ -8,7 +8,7 @@ set -o nounset;		# abort on unbound variable
 #}}}
 
 #{{{ Variables
-fVersion="0.1.2";
+fVersion="0.1.3";
 readonly fVersion;
 
 if [[ ${FERN_VAULT:-"unset"} != "unset" ]]; then
@@ -56,6 +56,23 @@ main() {
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 # ~~~~~~~~~~~~~~    HELPER FUNCTIONS      ~~~~~~~~~~~~~~
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+# check for default editor for opening of files and then open passed file(s)
+# $1 - file(s) string
+default_editor() {
+	local editor="${EDITOR:-${VISUAL:-${FCEDIT:-vi}}}"; # fallback editor set as vi
+	local editors='nano joe vi';
+	if [ -z "$DISPLAY" ]; then
+		editors="gedit kate $editors";
+		for e in $editors; do
+			if type "$e" >/dev/null 2>/dev/null; then
+				editor="$e";
+			fi
+		done
+	fi
+	exec $editor -O $1;
+	return 0;
+}
 
 # catches if no args are passed OR the first arg is a "common" help flag
 help_wanted() {
@@ -198,7 +215,7 @@ process_template() {
 		if [ ! -e "$fTemplates/$target" ]; then
 			print_err "Error: Template not found with the name '$target'.";
 		fi
-		$EDITOR "$fTemplates/$target";
+		default_editor "$fTemplates/$target";
 		;;
 	add)
 		if [ "$#" -lt 3 ]; then cmd_usage "$1"; fi
@@ -206,7 +223,7 @@ process_template() {
 		if [ -e "$target" ]; then
 			print_err "Error: Template already exists with that name '$target'.";
 		fi
-		$EDITOR "$fTemplates/$target";
+		default_editor "$fTemplates/$target";
 		;;
 	del)
 		if [ "$#" -lt 3 ]; then cmd_usage "$1"; fi
@@ -254,7 +271,7 @@ process_journal() {
 			# set start date to next week
 			dt_start=$(date --date="$dt_start +1 weeks" +"%Y-%m-%d")
 		done
-		$EDITOR -O $files
+		default_editor "$files"
 		;;
 	open)
 		if [ "$#" -ne 3 ]; then
@@ -326,7 +343,7 @@ process_note() {
 			printf "Error: Note not found with the name '%s'.\n" "$target";
 			if [ $lines -eq 1 ] && [ $chars -gt 1 ]; then
 				# if only 1 search record returned, open it
-				$EDITOR "$hits";
+				default_editor "$hits";
 				exit 0;
 			elif [ $lines -gt 1 ]; then
 				# if more than 1 record, display possible files of interest to user
@@ -334,7 +351,7 @@ process_note() {
 			fi
 			exit 1;
 		fi
-		$EDITOR "$fNotes/$target";
+		default_editor "$fNotes/$target";
 		;;
 	add)
 		if [ "$#" -lt 3 ]; then cmd_usage "$1"; fi
@@ -351,7 +368,7 @@ process_note() {
 			# create a new Note from a Template file
 			cp "$fTemplates/$targetT" "$fNotes/$targetF";
 		fi
-		$EDITOR "$fNotes/$targetF";
+		default_editor "$fNotes/$targetF";
 		;;
 	del)
 		if [ "$#" -lt 3 ]; then cmd_usage "$1"; fi
@@ -419,8 +436,7 @@ open_yearly_journal() {
 		cp "$fl" "$target";
 		sed --in-place "s/{{YEAR}}/$yr/g" "$target";
 	fi
-	$EDITOR "$target";
-	exit 0;
+	default_editor "$target";
 }
 
 # $1 - journal date;
@@ -437,8 +453,7 @@ open_monthly_journal() {
 		sed --in-place "s/{{MONTH}}/$mnth_full/g" "$target";
 		sed --in-place "s/{{YEAR}}/$yr/g" "$target";
 	fi
-	$EDITOR "$target";
-	exit 0;
+	default_editor "$target";
 }
 
 # $1 - journal date;
@@ -455,8 +470,7 @@ open_weekly_journal() {
 		cp "$wl" "$target";
 		sed --in-place "s/{{WEEKNO}}/$wk/g" "$target";
 	fi
-	$EDITOR "$target";
-	exit 0;
+	default_editor "$target";
 }
 
 # $1 - old name; $2 - new name;

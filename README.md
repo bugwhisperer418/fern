@@ -1,3 +1,27 @@
+```
+⠀⠀⠀⠀⠀⠀⢀⡀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀
+⠀⠀⠘⠳⠀⠀⠙⣠⠖⢀⣀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀
+⠀⠀⠙⠛⠣⠈⢦⠈⢴⡿⠃⣀⡔⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀
+⠀⠐⠺⠿⠿⠆⠘⣧⡈⢀⣾⠏⣠⣴⠃⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀
+⠀⠀⠤⢶⣶⠶⠆⠘⣷⡄⠁⣾⡿⠃⣠⣴⠂⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀
+⠀⠀⢀⣠⣤⣤⣤⣄⠘⣿⣆⠈⢠⣾⠿⢁⣴⡾⠁⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀
+⠀⠀⠀⢀⣠⣤⣤⣶⣦⡈⢿⣧⡈⠁⣴⣿⠟⠁⣠⣶⠃⠀⢀⠀⠀⠀⠀⠀⠀⠀
+⠀⠀⠀⠀⠈⢉⣉⣩⣤⣤⡄⢻⣿⣄⠘⠁⢠⣾⡿⠁⣠⣾⡟⠀⢀⣠⠀⠀⠀⠀
+⠀⠀⠀⠀⠚⠻⠿⠟⠛⠛⠁⠀⠙⣿⣷⡄⠙⠋⣠⣾⣿⠏⢀⣴⣿⠃⢀⣤⠂⠀
+⠀⠀⠀⠀⠀⣠⣤⣶⣶⣿⠿⠟⠂⠈⠻⣿⣦⡀⠻⠟⢁⣴⣿⡟⢁⣴⣿⡏⠀⠀
+⠀⠀⠀⠀⠀⠀⠀⠀⠀⢀⣠⣤⣶⣶⡄⠙⢿⣿⣦⡀⠺⠟⠋⣠⣿⣿⠏⣠⣾⠀
+⠀⠀⠀⠀⠀⠀⠀⢤⣾⠿⠿⠟⠋⢉⣀⣤⣄⠙⢿⣿⣦⡀⠐⢿⠿⢃⣼⣿⡿⠀
+⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⣀⣴⣾⣿⣿⠟⠋⠀⠀⠙⢿⣿⣷⣄⠀⠸⣿⠟⠀⠀
+⠀⠀⠀⠀⠀⠀⠀⠀⠀⠘⠛⠉⠉⣠⣴⣶⣾⣿⡿⠗⠀⠙⠻⣿⣿⣦⣀⠀⠀⠀
+⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠐⠚⠛⠛⠛⠉⠁⠀⠒⠛⠛⠂⠈⠙⠛⠛⠓⠂⠀
+    _____  ___  ____   ____  
+   |     |/  _]|    \ |    \ 
+   |   __/  [_ |  D  )|  _  |
+   |  |_|    _]|    / |  |  |
+   |   _]   [_ |    \ |  |  |
+   |  | |     ||  .  \|  |  |
+   |__| |_____||__|\_||__|__|
+```
 # Fern
 
 `fern` is a swiss-army knife for your notetaking and personal knowledge management. Fern is a commandline tool to manage, curate, and search a vault of your personal notes. It offers an alternative to heavier GUI-based notetaking management applications. It was designed for systems that are resource constrained or for users that value the privacy and security of their data.
