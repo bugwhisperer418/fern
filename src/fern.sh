@@ -8,7 +8,7 @@ set -o nounset;		# abort on unbound variable
 #}}}
 
 #{{{ Variables
-fVersion="0.0.9";
+fVersion="0.1.0";
 readonly fVersion;
 
 if [[ ${FERN_VAULT:-"unset"} != "unset" ]]; then
@@ -132,10 +132,10 @@ process_vault() {
 		;;
 	stat)
 		# Vault stats printed out
-		cntB=$(wc --lines < "$fBookmarks");
-		cntN=$(find "$fNotes" | wc --lines);
-		cntJ=$(find "$fJournals" | wc --lines);
-		cntT=$(find "$fTemplates" | wc --lines);
+		local cntB=$(wc --lines < "$fBookmarks");
+		local cntN=$(find "$fNotes" | wc --lines);
+		local cntJ=$(find "$fJournals" | wc --lines);
+		local cntT=$(find "$fTemplates" | wc --lines);
 		printf "Vault Location: $FERN_VAULT\n# Bookmarks:\t%d\n# Journals:\t%d\n# Notes:\t%d\n# Templates:\t%d\n" "$cntB" "$cntJ" "$cntN" "$cntT";
 		;;
 	*)
@@ -153,7 +153,7 @@ process_bookmark() {
 		;;
 	add)
 		if [ "$#" -ne 3 ]; then cmd_usage "$1"; fi
-		target=$(ext_checks "$3");
+		local target=$(ext_checks "$3");
 		if [ ! -e "$fNotes/$target" ]; then
 			print_err "Error: Note not found with the name '$target'.";
 		elif [ "$(awk "/$target/" < "$fBookmarks" | wc --lines)" -eq 0 ]; then
@@ -163,7 +163,7 @@ process_bookmark() {
 		;;
 	del)
 		if [ "$#" -ne 3 ]; then cmd_usage "$1"; fi
-		target=$(ext_checks "$3");
+		local target=$(ext_checks "$3");
 		mktemp -d -t "$temp";
 		trap '{ rm -f -- "$temp"; }' EXIT;
 		grep -xv "$target" "$fBookmarks" > "$temp" && mv "$temp" "$fBookmarks";
@@ -183,7 +183,7 @@ process_template() {
 		;;
 	open)
 		if [ "$#" -lt 3 ]; then cmd_usage "$1"; fi
-		target=$(ext_checks "$3");
+		local target=$(ext_checks "$3");
 		if [ ! -e "$fTemplates/$target" ]; then
 			print_err "Error: Template not found with the name '$target'.";
 		fi
@@ -191,7 +191,7 @@ process_template() {
 		;;
 	add)
 		if [ "$#" -lt 3 ]; then cmd_usage "$1"; fi
-		target=$(ext_checks "$3");
+		local target=$(ext_checks "$3");
 		if [ -e "$target" ]; then
 			print_err "Error: Template already exists with that name '$target'.";
 		fi
@@ -199,7 +199,7 @@ process_template() {
 		;;
 	del)
 		if [ "$#" -lt 3 ]; then cmd_usage "$1"; fi
-		target=$(ext_checks "$3");
+		local target=$(ext_checks "$3");
 		if [ ! -e "$fTemplates/$target" ]; then
 			print_err "Error: Template not found with the name '$target'.";
 		fi
@@ -207,9 +207,9 @@ process_template() {
 		;;
 	move)
 		if [ "$#" -lt 3 ]; then cmd_usage "$1"; fi
-		oldT=$(ext_checks "$3");
+		local oldT=$(ext_checks "$3");
 		if [ "$#" -lt 4 ]; then cmd_usage "$1"; fi
-		newT=$(ext_checks "$4");
+		local newT=$(ext_checks "$4");
 		if [ ! -e "$fTemplates/$oldT" ]; then
 			print_err "Error: Template not found with the name '$oldT'.";
 		fi
@@ -270,12 +270,12 @@ process_note() {
 	open)
 		if [ "$#" -lt 3 ]; then cmd_usage "$1"; fi
 		# try to open a note with the exact name provided first
-		target=$(ext_checks "$3");
+		local target=$(ext_checks "$3");
 		if [ ! -e "$fNotes/$target" ]; then
 			# search for the note by name given in other files
-			hits=$(find_items "$3" "$fNotes");
-			lines=$(echo "$hits" | wc -l);
-			chars=$(echo "$hits" | wc -m);
+			local hits=$(find_items "$3" "$fNotes");
+			local lines=$(echo "$hits" | wc -l);
+			local chars=$(echo "$hits" | wc -m);
 			printf "Error: Note not found with the name '%s'.\n" "$target";
 			if [ $lines -eq 1 ] && [ $chars -gt 1 ]; then
 				# if only 1 search record returned, open it
@@ -291,13 +291,13 @@ process_note() {
 		;;
 	add)
 		if [ "$#" -lt 3 ]; then cmd_usage "$1"; fi
-		targetF=$(ext_checks "$3");
+		local targetF=$(ext_checks "$3");
 		if [ -e "$fNotes/$targetF" ]; then
 			print_err "Error: Note already exists with the name '$targetF'.";
 		fi
 		# optional starting template provided
 		if [ "$#" -eq 4 ]; then
-			targetT=$(ext_checks "$4");
+			local targetT=$(ext_checks "$4");
 			if [ ! -e "$fTemplates/$targetT" ]; then
 				print_err "Error: Template not found with the name '$targetT'.";
 			fi
@@ -308,7 +308,7 @@ process_note() {
 		;;
 	del)
 		if [ "$#" -lt 3 ]; then cmd_usage "$1"; fi
-		target="$(ext_checks "$3" )";
+		local target="$(ext_checks "$3" )";
 		if [ -e "$fNotes/$target" ]; then
 			rm -f "$fNotes/$target";
 			update_internal_links "$target" "\[!FILE REMOVED $target\]";
@@ -318,9 +318,9 @@ process_note() {
 		;;
 	move)
 		if [ "$#" -lt 3 ]; then cmd_usage "$1"; fi
-		targetOld=$(ext_checks "$3");
+		local targetOld=$(ext_checks "$3");
 		if [ "$#" -lt 4 ]; then cmd_usage "$1"; fi
-		targetNew=$(ext_checks "$4");
+		local targetNew=$(ext_checks "$4");
 		if [ ! -e "$fNotes/$targetOld" ]; then
 			print_err "Error: Note not found with the name '$targetOld'.";
 		fi
@@ -377,9 +377,9 @@ update_internal_links() {
 # $1 - pattern; $2 - Folder of items to search over; $3 - verbose flag;
 find_items() {
 	if [ "$#" -eq 3 ] && [ "$3" = "--verbose" ]; then
-		find "$2" -name "*.md" -exec grep --dereference-recursive --line-number --ignore-case "$1" '{}' \+ | sort | less;
+		find "$2" -name "*.{md,log}" -exec grep --dereference-recursive --line-number --ignore-case "$1" '{}' \+ | sort | less;
 	else
-		find "$2" -name "*.md" -exec grep --dereference-recursive --line-number --ignore-case --files-with-matches "$1" '{}' \+ | sort;
+		find "$2" -name "*.{md,log}" -exec grep --dereference-recursive --line-number --ignore-case --files-with-matches "$1" '{}' \+ | sort;
 	fi
 }
 
