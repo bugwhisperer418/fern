@@ -8,7 +8,7 @@ set -o nounset;		# abort on unbound variable
 #}}}
 
 #{{{ Variables
-fVersion="0.1.0";
+fVersion="0.1.1";
 readonly fVersion;
 
 if [[ ${FERN_VAULT:-"unset"} != "unset" ]]; then
@@ -16,9 +16,11 @@ if [[ ${FERN_VAULT:-"unset"} != "unset" ]]; then
 	fJournals="$FERN_VAULT/journals";
 	fTemplates="$FERN_VAULT/templates";
 	fBookmarks="$FERN_VAULT/bookmarks";
-	dj="$fTemplates/daily-journal.md";
+	wl="$fTemplates/weekly.log";
+	ml="$fTemplates/monthly.log";
+	fl="$fTemplates/future.log";
 	temp="$FERN_VAULT/.temp";
-	readonly fNotes fJournals fTemplates fBookmarks dj temp;
+	readonly fNotes fJournals fTemplates fBookmarks wl ml fl temp;
 fi
 #}}}
 
@@ -37,10 +39,15 @@ main() {
 			printf "Error: Fern Vault folder does not exist or the environment variable FERN_VAULT is not setup correctly.\nRun 'fern vault create <path>' to setup a new Fern Vault folder for management.\nIf you already went through the Fern Vault creation process, please verify that the FERN_VAULT environment variable is set correctly. You can verify this with 'echo \$FERN_VAULT'.\n" >&2;
 			exit 1;
 		fi
-
-		if [ ! -e "${dj}" ]; then
-			print_err "Error: The required 'daily-journal.md' template file does not exist! Please create one at '$dj' and then try again.";
+		if [ ! -e "${fl}" ]; then
+			print_err "Error: The required 'future.log' template file does not exist! Please create one at '$fl' and then try again.";
 		fi
+		if [ ! -e "${ml}" ]; then
+			print_err "Error: The required 'monthly.log' template file does not exist! Please create one at '$ml' and then try again.";
+		fi
+		if [ ! -e "${wl}" ]; then
+			print_err "Error: The required 'weekly.log' template file does not exist! Please create one at '$wl' and then try again.";
+		fi	
 		decipher_request "${@}";
 	fi
 	exit 0;
@@ -60,7 +67,7 @@ usage_lite() {
 }
 
 usage_indepth() {
-	printf "USAGE:\n  fern COMMAND [ACTION [ARGS...]]\n\nCOMMANDS:\n  help\t\t\t\t\t\t\tdisplay Fern help\n\n  vault create <path>\t\t\t\t\tsetup a new Fern Vault\n  vault stat\t\t\t\t\t\tget stats of Fern Vault\n\n  bookmark list\t\t\t\t\t\tlist out all Bookmarks\n  bookmark add <note_name>\t\t\t\tadd a note to Bookmarks\n  bookmark del <note_name>\t\t\t\tremove a note from Bookmarks\n\n  journal\t\t\t\t\t\topens today's Journal entry\n  journal open yesterday|today|tomorrow|<YYYY-MM-DD>\topen a Journal entry\n  journal find <pattern>\t\t\t\tsearch Journals for matching pattern\n\n  note add <note> [<template>]\t\t\t\tadd a new Note\n  note del <note>\t\t\t\t\tdelete a Note\n  note open <note>\t\t\t\t\topen a Note\n  note move <old_note> <new_note>\t\t\tmove/rename a Note\n  note find <pattern>\t\t\t\t\tsearch Notes for matching pattern\n\n  template list\t\t\t\t\t\tget list of Template files\n  template add <template>\t\t\t\tadd a new Template\n  template del <template>\t\t\t\tdelete a Template\n  template open <template>\t\t\t\topen a Template\n  template move <old_template> <new_template>\t\tmove/rename a Template\n\nFor more in-depth documentation and advanced usage see the fern(1) manpage (\"man fern\") and/or https://sr.ht/~bugwhisperer/fern/\n";
+	printf "USAGE:\n  fern COMMAND [ACTION [ARGS...]]\n\nCOMMANDS:\n  help\t\t\t\t\t\t\tdisplay Fern help\n\n  vault create <path>\t\t\t\t\tsetup a new Fern Vault\n  vault stat\t\t\t\t\t\tget stats of Fern Vault\n\n  bookmark list\t\t\t\t\t\tlist out all Bookmarks\n  bookmark add <note_name>\t\t\t\tadd a note to Bookmarks\n  bookmark del <note_name>\t\t\t\tremove a note from Bookmarks\n\n  journal\t\t\t\t\t\topens today's weekly Journal log\n  journal open <{this|next|last}-{week|month|year}>\topen commonly accessed Journal log\n  journal open <YYYY-MM-DD>\t\t\t\topen a specific Journal log\n  journal find <pattern>\t\t\t\tsearch Journals for matching pattern\n\n  note add <note> [<template>]\t\t\t\tadd a new Note\n  note del <note>\t\t\t\t\tdelete a Note\n  note open <note>\t\t\t\t\topen a Note\n  note move <old_note> <new_note>\t\t\tmove/rename a Note\n  note find <pattern>\t\t\t\t\tsearch Notes for matching pattern\n\n  template list\t\t\t\t\t\tget list of Template files\n  template add <template>\t\t\t\tadd a new Template\n  template del <template>\t\t\t\tdelete a Template\n  template open <template>\t\t\t\topen a Template\n  template move <old_template> <new_template>\t\tmove/rename a Template\n\nFor more in-depth documentation and advanced usage see the fern(1) manpage (\"man fern\") and/or https://sr.ht/~bugwhisperer/fern/\n";
 }
 
 cmd_usage() {
@@ -72,7 +79,7 @@ cmd_usage() {
 		printf "Usage:\n  fern bookmark list\n  fern bookmark add|del <note_name>\n";
 		;;
 	journal)
-		printf "Usage:\n  fern journal\n  fern journal open yesterday|today|tomorrow|<YYYY-MM-DD>\n  fern journal find <search_pattern> [--verbose]\n";
+		printf "Usage:\n  fern journal\n  fern journal open <{this|next|last}-{week|month|year}>\n  fern journal open <YYYY-MM-DD>\n  fern journal find <search_pattern> [--verbose]\n";
 		;;
 	note)
 		printf "Usage:\n  fern note\n  fern note del|open <note_name>\n  fern note add <note_name> [<template_name>]\n  fern note find <search_pattern> [--verbose]\n  fern note move <old_note> <new_note>\n  fern note append <template_name> [<note_name>]\n";
@@ -123,10 +130,14 @@ process_vault() {
 		mkdir --parents "$3/journals";
 		mkdir --parents "$3/templates";
 		touch "$3/bookmarks";
-		touch "$3/templates/daily-journal.md";
-		printf "# {{DATE}}" | tee --append "$3/templates/daily-journal.md" >/dev/null;
+		touch "$3/templates/future.log";
+		printf "# Future Log ## JAN\n" | tee --append "$3/templates/future.log" >/dev/null;
+		touch "$3/templates/monthly.log";
+		printf "# {{MONTH}} {{YEAR}}\n\n## Reflection\n\n## Log\n" | tee --append "$3/templates/monthly.log" >/dev/null;
+		touch "$3/templates/weekly.log";
+		printf "# Week {{WEEKNO}}\n\n## Reflection\n\n## Log\n\n## Daily Notes\n" | tee --append "$3/templates/weekly.log" >/dev/null;
 
-		printf "A Fern Vault has been setup for you at '%s'.\nYou're all ready to start managing your notes!\nBe sure to review 'fern help' for more information on the available commands and their arguments.\nA starter 'daily-journal' template file was created at '%s/daily-journal.md'.\nFeel free to add any starting contents that you require of your daily journal entries.\n" "$3" "$3/templates";
+		printf "A Fern Vault has been setup for you at '%s'.\nYou're all ready to start managing your notes!\nBe sure to review 'fern help' for more information on the available commands and their arguments.\nSeveral starter log files for yearly/monthly/weekly levels were created at '%s'.\nFeel free to add any starting contents that you require of your log journal entries.\n" "$3" "$3/templates";
 		printf "\n~~ IMPORTANT! ~~\nIn order for fern to know where to find your Vault, add the following to your shell's RC File (ex. \$HOME/.bashrc or \$HOME/.zshrc):\n";
 		printf "export FERN_VAULT=\"%s\"\n" "$3";
 		;;
@@ -224,28 +235,49 @@ process_template() {
 # $1 - action; $2 - journal date | pattern string.;
 process_journal() {
 	if [ "$#" -eq 1 ]; then
-		# shortcut to create/open a new journal for today's date
-		create_journal "$(date +"%Y-%m-%d")";
-	elif [ "$#" -lt 3 ]; then
+		# shortcut to create/open a new weekly journal for today's date
+		open_weekly_journal "$(date +"%Y-%m-%d")";
+	elif [ "$#" -lt 2 ]; then
 		cmd_usage "$1";
 	fi
 	case "$2" in
 	open)
+		if [ "$#" -ne 3 ]; then
+			cmd_usage "$1";
+		fi
 		case "$3" in
-		today)
-			create_journal "$(date +"%Y-%m-%d")";
+		last-week)
+			open_weekly_journal "$(date --date="1 week ago" +"%Y-%m-%d")";
 			;;
-		yesterday)
-			create_journal "$(date --date="yesterday" +"%Y-%m-%d")";
+		this-week)
+			open_weekly_journal "$(date +"%Y-%m-%d")";
 			;;
-		tomorrow)
-			create_journal "$(date --date="tomorrow" +"%Y-%m-%d")";
+		next-week)
+			open_weekly_journal "$(date --date="1 week" +"%Y-%m-%d")";
+			;;
+		last-month)
+			open_monthly_journal "$(date --date="1 month ago" +"%Y-%m-%d")";
+			;;
+		this-month)
+			open_monthly_journal "$(date +"%Y-%m-%d")";
+			;;
+		next-month)
+			open_monthly_journal "$(date --date="1 month" +"%Y-%m-%d")";
+			;;
+		last-year)
+			open_yearly_journal "$(date --date="1 year ago" +"%Y-%m-%d")";
+			;;
+		this-year)
+			open_yearly_journal "$(date +"%Y-%m-%d")";
+			;;
+		next-year)
+			open_yearly_journal "$(date --date="1 year" +"%Y-%m-%d")";
 			;;
 		*)
 			if date -d "$3" "+%Y-%m-%d" >/dev/null 2>&1; then
-				create_journal "$3";
+				open_weekly_journal "$3";
 			else
-				printf "Usage: fern journal open yesterday|today|tomorrow|<YYYY-MM-DD>";
+				printf "Usage: fern journal open <{this|next|last}-{week|month|year}>|<YYYY-MM-DD>";
 			fi
 			;;
 		esac
@@ -355,11 +387,58 @@ ext_checks() {
 }
 
 # $1 - journal date;
-create_journal() {
-	target=$(ext_checks "$fJournals/$1");
+get_week_monday() {
+	local dow=$(date -d "$1" +"%u");
+	local monday=$(date -d "$1 -$((dow-1)) days" +%Y-%m-%d);
+	echo $monday;
+}
+
+# $1 - journal date;
+open_yearly_journal() {
+	local yr=$(date -d "$1" +"%Y")
+	# ensure year folder exists
+	mkdir --parents "$fJournals/$yr"
+	# check and setup yearly future log file if dne
+	local target="$fJournals/$yr/future.log";
 	if [ ! -e "$target" ]; then
-		cp "$dj" "$target";
-		sed --in-place "s/{{DATE}}/$1/g" "$target";
+		cp "$fl" "$target";
+		sed --in-place "s/{{YEAR}}/$yr/g" "$target";
+	fi
+	$EDITOR "$target";
+	exit 0;
+}
+
+# $1 - journal date;
+open_monthly_journal() {
+	local yr=$(date -d "$1" +"%Y")
+	local mnth=$(date -d "$1" +"%m")
+	# ensure month/year folder exists
+	mkdir --parents "$fJournals/$yr/$mnth"
+	# check and setup monthly log file if dne
+	local target="$fJournals/$yr/$mnth/monthly.log";
+	if [ ! -e "$target" ]; then
+		cp "$ml" "$target";
+		mnth_full=$(date -d $1 +"%B")
+		sed --in-place "s/{{MONTH}}/$mnth_full/g" "$target";
+		sed --in-place "s/{{YEAR}}/$yr/g" "$target";
+	fi
+	$EDITOR "$target";
+	exit 0;
+}
+
+# $1 - journal date;
+open_weekly_journal() {
+	local monday=$(get_week_monday "$1")
+	local mnth=$(date -d "$monday" +"%m")
+	local yr=$(date -d "$monday" +"%Y")
+	local wk=$(date -d "$monday" +"%V")
+	# ensure month/year folder exists
+	mkdir --parents "$fJournals/$yr/$mnth"
+	# check and setup weekly log file if dne
+	local target="$fJournals/$yr/$mnth/wk$wk.log";
+	if [ ! -e "$target" ]; then
+		cp "$wl" "$target";
+		sed --in-place "s/{{WEEKNO}}/$wk/g" "$target";
 	fi
 	$EDITOR "$target";
 	exit 0;
