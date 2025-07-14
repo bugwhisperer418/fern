@@ -60,15 +60,23 @@ main() {
 # check for default editor for opening of files and then open passed file(s)
 # $1 - file(s) string
 default_editor() {
-	local editor="${EDITOR:-${VISUAL:-${FCEDIT:-vi}}}"; # fallback editor set as vi
-	local editors='nano joe vi';
-	if [ -z "$DISPLAY" ]; then
-		editors="gedit kate $editors";
+	local editor="${EDITOR:-${VISUAL:-${FCEDIT:-NONE}}}";
+	if [ $editor = "NONE" ]; then
+		local editors='nano joe vim vi'; # common editors to check as fallback
+		local display='${DISPLAY:-NONE}';
+		if [ $display = "NONE" ]; then
+			editors="gedit kate $editors"; # add some common GUI editors to check too
+		fi
 		for e in $editors; do
 			if type "$e" >/dev/null 2>/dev/null; then
 				editor="$e";
 			fi
+			if [ $editor != "NONE" ]; then
+				break;
+			fi
 		done
+		# editor is still none after checking common ones, so raise an error
+		print_error "Error: No default editor found! Set $EDITOR, $VISUAL or $FCEDIT to your default editor.";
 	fi
 	exec $editor -O $1;
 	return 0;
