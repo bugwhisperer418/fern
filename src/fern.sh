@@ -8,7 +8,7 @@ set -o nounset;		# abort on unbound variable
 #}}}
 
 #{{{ Variables
-fVersion="0.1.3";
+fVersion="0.1.5";
 readonly fVersion;
 
 if [[ ${FERN_VAULT:-"unset"} != "unset" ]]; then
@@ -57,15 +57,14 @@ main() {
 # ~~~~~~~~~~~~~~    HELPER FUNCTIONS      ~~~~~~~~~~~~~~
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-# check for default editor for opening of files and then open passed file(s)
-# $1 - file(s) string
+# check for default editor for opening of files
 default_editor() {
 	local editor="${EDITOR:-${VISUAL:-${FCEDIT:-NONE}}}";
 	if [ $editor = "NONE" ]; then
-		local editors='nano joe vim vi'; # common editors to check as fallback
+		local editors='nano joe vim vi helix nvim'; # common terminal editors to check as fallback
 		local display='${DISPLAY:-NONE}';
 		if [ $display = "NONE" ]; then
-			editors="gedit kate $editors"; # add some common GUI editors to check too
+			editors="$editors code subl gedit kate"; # add some common GUI editors to check too
 		fi
 		for e in $editors; do
 			if type "$e" >/dev/null 2>/dev/null; then
@@ -78,7 +77,32 @@ default_editor() {
 		# editor is still none after checking common ones, so raise an error
 		print_error "Error: No default editor found! Set $EDITOR, $VISUAL or $FCEDIT to your default editor.";
 	fi
-	exec $editor -O $1;
+	echo "$editor";
+}
+
+# open file(s) in an editor
+# $1 - file(s) [string]
+# $2 - multiple files flag [bool]
+open_files() {
+	local editor=$(default_editor);
+	local multi_file=${2-false};
+	if [ $multi_file == true ]; then
+		# check if we are dealing with editor that can handle multiple windows
+		if [ $editor == "nvim" ] || [ $editor == "vim" ] || [ $editor == "vi" ]; then
+			exec $editor -O $1;
+			return 0;
+		fi
+	fi
+	# special open commands for some editors
+	if [ $editor == "kate" ]; then
+		exec $editor -b $1;
+	elif [ $editor == "code" ]; then
+		exec $editor -n $1;
+	else
+		# covers all other editors for multi-files
+		# & also covers all single file openings
+		exec $editor $1;
+	fi
 	return 0;
 }
 
@@ -223,7 +247,7 @@ process_template() {
 		if [ ! -e "$fTemplates/$target" ]; then
 			print_err "Error: Template not found with the name '$target'.";
 		fi
-		default_editor "$fTemplates/$target";
+		open_files "$fTemplates/$target";
 		;;
 	add)
 		if [ "$#" -lt 3 ]; then cmd_usage "$1"; fi
@@ -231,7 +255,7 @@ process_template() {
 		if [ -e "$target" ]; then
 			print_err "Error: Template already exists with that name '$target'.";
 		fi
-		default_editor "$fTemplates/$target";
+		open_files "$fTemplates/$target";
 		;;
 	del)
 		if [ "$#" -lt 3 ]; then cmd_usage "$1"; fi
@@ -279,7 +303,7 @@ process_journal() {
 			# set start date to next week
 			dt_start=$(date --date="$dt_start +1 weeks" +"%Y-%m-%d")
 		done
-		default_editor "$files"
+		open_files "$files" true;
 		;;
 	open)
 		if [ "$#" -ne 3 ]; then
@@ -351,7 +375,7 @@ process_note() {
 			printf "Error: Note not found with the name '%s'.\n" "$target";
 			if [ $lines -eq 1 ] && [ $chars -gt 1 ]; then
 				# if only 1 search record returned, open it
-				default_editor "$hits";
+				open_files "$hits";
 				exit 0;
 			elif [ $lines -gt 1 ]; then
 				# if more than 1 record, display possible files of interest to user
@@ -359,7 +383,7 @@ process_note() {
 			fi
 			exit 1;
 		fi
-		default_editor "$fNotes/$target";
+		open_files "$fNotes/$target";
 		;;
 	add)
 		if [ "$#" -lt 3 ]; then cmd_usage "$1"; fi
@@ -376,7 +400,7 @@ process_note() {
 			# create a new Note from a Template file
 			cp "$fTemplates/$targetT" "$fNotes/$targetF";
 		fi
-		default_editor "$fNotes/$targetF";
+		open_files "$fNotes/$targetF";
 		;;
 	del)
 		if [ "$#" -lt 3 ]; then cmd_usage "$1"; fi
@@ -444,7 +468,7 @@ open_yearly_journal() {
 		cp "$fl" "$target";
 		sed --in-place "s/{{YEAR}}/$yr/g" "$target";
 	fi
-	default_editor "$target";
+	open_files "$target";
 }
 
 # $1 - journal date;
@@ -461,7 +485,7 @@ open_monthly_journal() {
 		sed --in-place "s/{{MONTH}}/$mnth_full/g" "$target";
 		sed --in-place "s/{{YEAR}}/$yr/g" "$target";
 	fi
-	default_editor "$target";
+	open_files "$target";
 }
 
 # $1 - journal date;
@@ -478,7 +502,7 @@ open_weekly_journal() {
 		cp "$wl" "$target";
 		sed --in-place "s/{{WEEKNO}}/$wk/g" "$target";
 	fi
-	default_editor "$target";
+	open_files "$target";
 }
 
 # $1 - old name; $2 - new name;
