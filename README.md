@@ -50,11 +50,25 @@ Fern has support for daily Journals (think a Engineer's log), Templates, and Boo
     ```
 
 ### Installation Options
-- `make install` - Installs to `~/.local` (recommended for single user)
+- `make install` - Installs to `~/.local` with completion for your current shell
 - `make install-system` - Installs system-wide to `/usr/local` (requires sudo)
 - `make install PREFIX=/custom/path` - Install to custom location
 - `make uninstall` - Remove user installation
 - `make uninstall-system` - Remove system installation
+
+### Shell Completion
+Fern includes tab completion for Bash, ZSH, and Fish shells. The installation automatically detects your current shell and installs the appropriate completion (falls back to Bash for unknown shells).
+
+**Manual Installation (if needed):**
+- **Bash**: Copy `src/fern_completion.bash` to `/etc/bash_completion.d/fern` or source in `.bashrc`
+- **ZSH**: Copy `src/_fern` to a directory in your `$fpath` (e.g., `/usr/local/share/zsh/site-functions/`)
+- **Fish**: Copy `src/fern.fish` to `~/.config/fish/completions/fern.fish`
+
+**Completion Features:**
+- Command and subcommand completion
+- Note names from your vault
+- Template names from your vault
+- Journal date options (last-week, this-month, etc.)
 
 ## Using Fern
 After installing fern, run `fern help` or the manpage documentation (you _did_ install the manpage, didn't you?), `man fern` for more guidance on using fern.

@@ -1,0 +1,149 @@
+#compdef fern
+# ZSH completion for fern command
+#
+# To manually install:
+# Copy this file to a directory in your $fpath (e.g., /usr/local/share/zsh/site-functions/_fern)
+# or add the directory containing this file to your $fpath in ~/.zshrc
+
+_fern() {
+  local context state line
+  typeset -A opt_args
+
+  _arguments -C \
+    '1: :_fern_commands' \
+    '2: :_fern_subcommands' \
+    '3: :_fern_third_level' \
+    '4: :_fern_fourth_level' \
+    '*::arg:->args'
+}
+
+_fern_commands() {
+  local commands
+  commands=(
+    'help:Show help information'
+    'vault:Vault operations'
+    'bookmark:Bookmark management'
+    'journal:Journal operations'
+    'note:Note management'
+    'template:Template management'
+  )
+  _describe 'commands' commands
+}
+
+_fern_subcommands() {
+  case $words[2] in
+    vault)
+      local vault_actions
+      vault_actions=(
+        'create:Create a new vault'
+        'stat:Show vault statistics'
+      )
+      _describe 'vault actions' vault_actions
+      ;;
+    bookmark)
+      local bookmark_actions
+      bookmark_actions=(
+        'list:List bookmarks'
+        'add:Add a bookmark'
+        'del:Delete a bookmark'
+      )
+      _describe 'bookmark actions' bookmark_actions
+      ;;
+    journal)
+      local journal_actions
+      journal_actions=(
+        'open:Open journal entry'
+        'find:Find journal entries'
+        'review:Review journal entries'
+      )
+      _describe 'journal actions' journal_actions
+      ;;
+    note)
+      local note_actions
+      note_actions=(
+        'add:Add a new note'
+        'del:Delete a note'
+        'open:Open a note'
+        'move:Move a note'
+        'find:Find notes'
+      )
+      _describe 'note actions' note_actions
+      ;;
+    template)
+      local template_actions
+      template_actions=(
+        'list:List templates'
+        'add:Add a template'
+        'del:Delete a template'
+        'open:Open a template'
+        'move:Move a template'
+      )
+      _describe 'template actions' template_actions
+      ;;
+  esac
+}
+
+_fern_third_level() {
+  case $words[2] in
+    journal)
+      if [[ $words[3] == "open" ]]; then
+        local journal_dates
+        journal_dates=(
+          'last-week:Last week journal'
+          'this-week:This week journal'
+          'next-week:Next week journal'
+          'last-month:Last month journal'
+          'this-month:This month journal'
+          'next-month:Next month journal'
+          'last-year:Last year journal'
+          'this-year:This year journal'
+          'next-year:Next year journal'
+        )
+        _describe 'journal dates' journal_dates
+      fi
+      ;;
+    bookmark)
+      if [[ $words[3] == "add" || $words[3] == "del" ]]; then
+        _fern_complete_notes
+      fi
+      ;;
+    note)
+      if [[ $words[3] == "open" || $words[3] == "del" || $words[3] == "move" ]]; then
+        _fern_complete_notes
+      fi
+      ;;
+    template)
+      if [[ $words[3] == "open" || $words[3] == "del" || $words[3] == "move" ]]; then
+        _fern_complete_templates
+      fi
+      ;;
+  esac
+}
+
+_fern_fourth_level() {
+  case $words[2] in
+    note)
+      if [[ $words[3] == "add" ]]; then
+        _fern_complete_templates
+      fi
+      ;;
+  esac
+}
+
+_fern_complete_notes() {
+  if [[ -n "$FERN_VAULT" && -d "$FERN_VAULT/notes" ]]; then
+    local notes
+    notes=(${(f)"$(find "$FERN_VAULT/notes" -name "*.md" -exec basename {} .md \; 2>/dev/null)"})
+    _describe 'notes' notes
+  fi
+}
+
+_fern_complete_templates() {
+  if [[ -n "$FERN_VAULT" && -d "$FERN_VAULT/templates" ]]; then
+    local templates
+    templates=(${(f)"$(find "$FERN_VAULT/templates" -name "*" -type f -exec basename {} \; 2>/dev/null)"})
+    _describe 'templates' templates
+  fi
+}
+
+_fern "$@"
