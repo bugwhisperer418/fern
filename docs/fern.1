@@ -1,6 +1,6 @@
 .\" Manpage for fern.
 .\" Contact andie@bugwhisperer.dev to correct errors or typos.
-.TH FERN 1 "09 Jan 2024" "0.0.8" "FERN MANUAL"
+.TH FERN 1 "01 Aug 2025" "0.1.7" "FERN MANUAL"
 
 .SH NAME
 fern \- a knowledge management system
@@ -73,19 +73,40 @@ Removes a single Note from Bookmarks.
 
 .SS
 .I journal
-Keep and view daily Journal entries, separate from Notes (which may represent long-term projects/idea).
+Keep and view Journal entries (weekly, monthly, yearly), separate from Notes (which may represent long-term projects/ideas).
 .TP
 .B ACTIONS
 .TP
-open {yesterday|today|tomorrow|<YYYY-MM-DD>}
+~~ NONE ~~
 .RS
-Opens a Journal entry for a specific date. Creates one of that date's Journal does not exist yet.
+Opens today's weekly Journal log (shortcut for current week).
 .RE
 
 .TP
-find <pattern>
+open <{this|next|last}-{week|month|year}>
+.RS
+Opens a Journal entry for a specific time period. Creates the Journal if it doesn't exist yet.
+Options include: this-week, next-week, last-week, this-month, next-month, last-month, this-year, next-year, last-year.
+.RE
+
+.TP
+open <YYYY-MM-DD>
+.RS
+Opens a weekly Journal entry for the week containing the specified date.
+.RE
+
+.TP
+review
+.RS
+Opens the previous month's Journal logs (monthly log and all weekly logs from that month) for review.
+.RE
+
+.TP
+find <pattern> [--verbose]
 .RS
 Searches through Journal entries for matches to a given RegEx pattern.
+The '--verbose' flag returns Journal snippets that matched, along with the filenames.
+Default is to only return filenames.
 .RE
 
 .SS
@@ -131,9 +152,16 @@ The '--verbose' flag returns Note snippets that matched, along with the filename
 Default is to only return filenames.
 .RE
 
+.TP
+append <template_name> [<note_name>]
+.RS
+Appends the contents of a template to an existing note.
+If no note name is provided, the template will be appended to a default note.
+.RE
+
 .SS
 .I template
-Templates serve as helpful blueprints to quickly spin up Notes and Journals. Saves from repeating same contents (like specific sets of headings and subheadings). The Template `daily-journal.md` is required to exist and is created as part of the Fern Vault setup process.
+Templates serve as helpful blueprints to quickly spin up Notes and Journals. Saves from repeating same contents (like specific sets of headings and subheadings). The Templates `future.log`, `monthly.log`, and `weekly.log` are required to exist and are created as part of the Fern Vault setup process.
 .TP
 .B ACTIONS
 .TP
@@ -184,9 +212,9 @@ $ fern journal
 .RE
 .fi
 .PP
-This opens up the daily journal for the current day, creating it if it doesn't exist.
-It will be created with whatever is contained in the 'daily-journal' template file.
-This is a shortcut for: `fern journal open today`.
+This opens up the weekly journal for the current week, creating it if it doesn't exist.
+It will be created with whatever is contained in the 'weekly.log' template file.
+This is a shortcut for: `fern journal open this-week`.
 
 .B Templating to save time
 .PP

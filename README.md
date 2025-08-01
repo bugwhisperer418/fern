@@ -29,6 +29,7 @@
 Fern has support for daily Journals (think a Engineer's log), Templates, and Bookmarking Notes. It has a RegEx compatable full-text search of Notes to find records in your Vault.
 
 ## Installing Fern
+
 1. Clone this repo.
     ```sh
     git clone https://git.sr.ht/~bugwhisperer/fern
@@ -37,14 +38,23 @@ Fern has support for daily Journals (think a Engineer's log), Templates, and Boo
     ```sh
     cd fern
     ```
-3. Run the `install.sh` script
+3. Install using Make
     ```sh
-    ./install.sh
+    make install          # Install to ~/.local (user install)
+    # OR
+    make install-system   # Install system-wide (requires sudo)
     ```
 4. Setup a new Fern Vault.
     ```sh
     fern vault create <path-to-vault-folder>
     ```
+
+### Installation Options
+- `make install` - Installs to `~/.local` (recommended for single user)
+- `make install-system` - Installs system-wide to `/usr/local` (requires sudo)
+- `make install PREFIX=/custom/path` - Install to custom location
+- `make uninstall` - Remove user installation
+- `make uninstall-system` - Remove system installation
 
 ## Using Fern
 After installing fern, run `fern help` or the manpage documentation (you _did_ install the manpage, didn't you?), `man fern` for more guidance on using fern.
