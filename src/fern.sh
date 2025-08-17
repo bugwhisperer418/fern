@@ -60,17 +60,17 @@ main() {
 # check for default editor for opening of files
 default_editor() {
 	local editor="${EDITOR:-${VISUAL:-${FCEDIT:-NONE}}}";
-	if [ $editor = "NONE" ]; then
+	if [ "$editor" = "NONE" ]; then
 		local editors='nano joe vim vi helix nvim'; # common terminal editors to check as fallback
-		local display='${DISPLAY:-NONE}';
-		if [ $display = "NONE" ]; then
+		local display="${DISPLAY:-NONE}";
+		if [ "$display" = "NONE" ]; then
 			editors="$editors code subl gedit kate"; # add some common GUI editors to check too
 		fi
 		for e in $editors; do
 			if type "$e" >/dev/null 2>/dev/null; then
 				editor="$e";
 			fi
-			if [ $editor != "NONE" ]; then
+			if [ "$editor" != "NONE" ]; then
 				break;
 			fi
 		done
@@ -84,24 +84,25 @@ default_editor() {
 # $1 - file(s) [string]
 # $2 - multiple files flag [bool]
 open_files() {
-	local editor=$(default_editor);
+	local editor
+	editor=$(default_editor);
 	local multi_file=${2-false};
-	if [ $multi_file == true ]; then
+	if [ "$multi_file" == true ]; then
 		# check if we are dealing with editor that can handle multiple windows
-		if [ $editor == "nvim" ] || [ $editor == "vim" ] || [ $editor == "vi" ]; then
-			exec $editor -O $1;
+		if [ "$editor" == "nvim" ] || [ "$editor" == "vim" ] || [ "$editor" == "vi" ]; then
+			exec "$editor" -O "$1";
 			return 0;
 		fi
 	fi
 	# special open commands for some editors
-	if [ $editor == "kate" ]; then
-		exec $editor -b $1;
-	elif [ $editor == "code" ]; then
-		exec $editor -n $1;
+	if [ "$editor" == "kate" ]; then
+		exec "$editor" -b "$1";
+	elif [ "$editor" == "code" ]; then
+		exec "$editor" -n "$1";
 	else
 		# covers all other editors for multi-files
 		# & also covers all single file openings
-		exec $editor $1;
+		exec "$editor" "$1";
 	fi
 	return 0;
 }
@@ -192,10 +193,14 @@ process_vault() {
 		;;
 	stat)
 		# Vault stats printed out
-		local cntB=$(wc --lines < "$fBookmarks");
-		local cntN=$(find "$fNotes" | wc --lines);
-		local cntJ=$(find "$fJournals" | wc --lines);
-		local cntT=$(find "$fTemplates" | wc --lines);
+		local cntB
+		cntB=$(wc --lines < "$fBookmarks");
+		local cntN
+		cntN=$(find "$fNotes" | wc --lines);
+		local cntJ
+		cntJ=$(find "$fJournals" | wc --lines);
+		local cntT
+		cntT=$(find "$fTemplates" | wc --lines);
 		printf "Vault Location: $FERN_VAULT\n# Bookmarks:\t%d\n# Journals:\t%d\n# Notes:\t%d\n# Templates:\t%d\n" "$cntB" "$cntJ" "$cntN" "$cntT";
 		;;
 	*)
@@ -213,7 +218,8 @@ process_bookmark() {
 		;;
 	add)
 		if [ "$#" -ne 3 ]; then cmd_usage "$1"; fi
-		local target=$(ext_checks "$3");
+		local target
+		target=$(ext_checks "$3");
 		if [ ! -e "$fNotes/$target" ]; then
 			print_err "Error: Note not found with the name '$target'.";
 		elif [ "$(awk "/$target/" < "$fBookmarks" | wc --lines)" -eq 0 ]; then
@@ -223,7 +229,8 @@ process_bookmark() {
 		;;
 	del)
 		if [ "$#" -ne 3 ]; then cmd_usage "$1"; fi
-		local target=$(ext_checks "$3");
+		local target
+		target=$(ext_checks "$3");
 		mktemp -d -t "$temp";
 		trap '{ rm -f -- "$temp"; }' EXIT;
 		grep -xv "$target" "$fBookmarks" > "$temp" && mv "$temp" "$fBookmarks";
@@ -243,7 +250,8 @@ process_template() {
 		;;
 	open)
 		if [ "$#" -lt 3 ]; then cmd_usage "$1"; fi
-		local target=$(ext_checks "$3");
+		local target
+		target=$(ext_checks "$3");
 		if [ ! -e "$fTemplates/$target" ]; then
 			print_err "Error: Template not found with the name '$target'.";
 		fi
@@ -251,7 +259,8 @@ process_template() {
 		;;
 	add)
 		if [ "$#" -lt 3 ]; then cmd_usage "$1"; fi
-		local target=$(ext_checks "$3");
+		local target
+		target=$(ext_checks "$3");
 		if [ -e "$target" ]; then
 			print_err "Error: Template already exists with that name '$target'.";
 		fi
@@ -259,7 +268,8 @@ process_template() {
 		;;
 	del)
 		if [ "$#" -lt 3 ]; then cmd_usage "$1"; fi
-		local target=$(ext_checks "$3");
+		local target
+		target=$(ext_checks "$3");
 		if [ ! -e "$fTemplates/$target" ]; then
 			print_err "Error: Template not found with the name '$target'.";
 		fi
@@ -267,9 +277,11 @@ process_template() {
 		;;
 	move)
 		if [ "$#" -lt 3 ]; then cmd_usage "$1"; fi
-		local oldT=$(ext_checks "$3");
+		local oldT
+		oldT=$(ext_checks "$3");
 		if [ "$#" -lt 4 ]; then cmd_usage "$1"; fi
-		local newT=$(ext_checks "$4");
+		local newT
+		newT=$(ext_checks "$4");
 		if [ ! -e "$fTemplates/$oldT" ]; then
 			print_err "Error: Template not found with the name '$oldT'.";
 		fi
@@ -292,12 +304,16 @@ process_journal() {
 	case "$2" in
 	review)
 		# open previous monthly log & all of it's weekly logs
-		local dt_start=$(date --date="1 month ago" +"%Y-%m-01")
-		local dt_end=$(date --date="$dt_start +1 months -1 days" +"%Y-%m-%d")
-		local files="$fJournals/$(date -d "$dt_start" +"%Y/%m")/monthly.log"
+		local dt_start
+		dt_start=$(date --date="1 month ago" +"%Y-%m-01")
+		local dt_end
+		dt_end=$(date --date="$dt_start +1 months -1 days" +"%Y-%m-%d")
+		local files
+		files="$fJournals/$(date -d "$dt_start" +"%Y/%m")/monthly.log"
 		while [[ "$dt_start" < "$dt_end" ]]; do
 			# get the monday of the week
-			local monday=$(get_week_monday $(date --date="$dt_start" +"%Y-%m-%d"))
+			local monday
+			monday=$(get_week_monday "$(date --date="$dt_start" +"%Y-%m-%d")")
 			# add week log file to string
 			files="$files $fJournals/$(date -d "$monday" +"%Y/%m/wk%V").log";
 			# set start date to next week
@@ -366,18 +382,22 @@ process_note() {
 	open)
 		if [ "$#" -lt 3 ]; then cmd_usage "$1"; fi
 		# try to open a note with the exact name provided first
-		local target=$(ext_checks "$3");
+		local target
+		target=$(ext_checks "$3");
 		if [ ! -e "$fNotes/$target" ]; then
 			# search for the note by name given in other files
-			local hits=$(find_items "$3" "$fNotes");
-			local lines=$(echo "$hits" | wc -l);
-			local chars=$(echo "$hits" | wc -m);
+			local hits
+			hits=$(find_items "$3" "$fNotes");
+			local lines
+			lines=$(echo "$hits" | wc -l);
+			local chars
+			chars=${#hits}
 			printf "Error: Note not found with the name '%s'.\n" "$target";
-			if [ $lines -eq 1 ] && [ $chars -gt 1 ]; then
+			if [ "$lines" -eq 1 ] && [ "$chars" -gt 1 ]; then
 				# if only 1 search record returned, open it
 				open_files "$hits";
 				exit 0;
-			elif [ $lines -gt 1 ]; then
+			elif [ "$lines" -gt 1 ]; then
 				# if more than 1 record, display possible files of interest to user
 				printf "Several possible files of interest were found:\n%s\n" "$hits";
 			fi
@@ -387,13 +407,15 @@ process_note() {
 		;;
 	add)
 		if [ "$#" -lt 3 ]; then cmd_usage "$1"; fi
-		local targetF=$(ext_checks "$3");
+		local targetF
+		targetF=$(ext_checks "$3");
 		if [ -e "$fNotes/$targetF" ]; then
 			print_err "Error: Note already exists with the name '$targetF'.";
 		fi
 		# optional starting template provided
 		if [ "$#" -eq 4 ]; then
-			local targetT=$(ext_checks "$4");
+			local targetT
+			targetT=$(ext_checks "$4");
 			if [ ! -e "$fTemplates/$targetT" ]; then
 				print_err "Error: Template not found with the name '$targetT'.";
 			fi
@@ -404,7 +426,8 @@ process_note() {
 		;;
 	del)
 		if [ "$#" -lt 3 ]; then cmd_usage "$1"; fi
-		local target="$(ext_checks "$3" )";
+		local target
+		target=$(ext_checks "$3");
 		if [ -e "$fNotes/$target" ]; then
 			rm -f "$fNotes/$target";
 			update_internal_links "$target" "\[!FILE REMOVED $target\]";
@@ -414,9 +437,11 @@ process_note() {
 		;;
 	move)
 		if [ "$#" -lt 3 ]; then cmd_usage "$1"; fi
-		local targetOld=$(ext_checks "$3");
+		local targetOld
+		targetOld=$(ext_checks "$3");
 		if [ "$#" -lt 4 ]; then cmd_usage "$1"; fi
-		local targetNew=$(ext_checks "$4");
+		local targetNew
+		targetNew=$(ext_checks "$4");
 		if [ ! -e "$fNotes/$targetOld" ]; then
 			print_err "Error: Note not found with the name '$targetOld'.";
 		fi
@@ -452,14 +477,17 @@ ext_checks() {
 
 # $1 - journal date;
 get_week_monday() {
-	local dow=$(date -d "$1" +"%u");
-	local monday=$(date -d "$1 -$((dow-1)) days" +%Y-%m-%d);
-	echo $monday;
+	local dow
+	dow=$(date -d "$1" +"%u");
+	local monday
+	monday=$(date -d "$1 -$((dow-1)) days" +%Y-%m-%d);
+	echo "$monday";
 }
 
 # $1 - journal date;
 open_yearly_journal() {
-	local yr=$(date -d "$1" +"%Y")
+	local yr
+	yr=$(date -d "$1" +"%Y")
 	# ensure year folder exists
 	mkdir --parents "$fJournals/$yr"
 	# check and setup yearly future log file if dne
@@ -473,15 +501,17 @@ open_yearly_journal() {
 
 # $1 - journal date;
 open_monthly_journal() {
-	local yr=$(date -d "$1" +"%Y")
-	local mnth=$(date -d "$1" +"%m")
+	local yr
+	yr=$(date -d "$1" +"%Y")
+	local mnth
+	mnth=$(date -d "$1" +"%m")
 	# ensure month/year folder exists
 	mkdir --parents "$fJournals/$yr/$mnth"
 	# check and setup monthly log file if dne
 	local target="$fJournals/$yr/$mnth/monthly.log";
 	if [ ! -e "$target" ]; then
 		cp "$ml" "$target";
-		mnth_full=$(date -d $1 +"%B")
+		mnth_full=$(date -d "$1" +"%B")
 		sed --in-place "s/{{MONTH}}/$mnth_full/g" "$target";
 		sed --in-place "s/{{YEAR}}/$yr/g" "$target";
 	fi
@@ -490,10 +520,14 @@ open_monthly_journal() {
 
 # $1 - journal date;
 open_weekly_journal() {
-	local monday=$(get_week_monday "$1")
-	local mnth=$(date -d "$monday" +"%m")
-	local yr=$(date -d "$monday" +"%Y")
-	local wk=$(date -d "$monday" +"%V")
+	local monday
+	monday=$(get_week_monday "$1")
+	local mnth
+	mnth=$(date -d "$monday" +"%m")
+	local yr
+	yr=$(date -d "$monday" +"%Y")
+	local wk
+	wk=$(date -d "$monday" +"%V")
 	# ensure month/year folder exists
 	mkdir --parents "$fJournals/$yr/$mnth"
 	# check and setup weekly log file if dne
@@ -517,9 +551,9 @@ update_internal_links() {
 # $1 - pattern; $2 - Folder of items to search over; $3 - verbose flag;
 find_items() {
 	if [ "$#" -eq 3 ] && [ "$3" = "--verbose" ]; then
-		find "$2" -name "*.{md,log}" -exec grep --dereference-recursive --line-number --ignore-case "$1" '{}' \+ | sort | less;
+		find "$2" -regex ".*\.\(md\|log\)" -exec grep --dereference-recursive --line-number --ignore-case "$1" '{}' \+ | sort | less;
 	else
-		find "$2" -name "*.{md,log}" -exec grep --dereference-recursive --line-number --ignore-case --files-with-matches "$1" '{}' \+ | sort;
+		find "$2" -regex ".*\.\(md\|log\)" -exec grep --dereference-recursive --line-number --ignore-case --files-with-matches "$1" '{}' \+ | sort;
 	fi
 }
 
