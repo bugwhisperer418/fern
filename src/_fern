@@ -26,6 +26,7 @@ _fern_commands() {
     'journal:Journal operations'
     'note:Note management'
     'template:Template management'
+    'find:Find across all content'
   )
   _describe 'commands' commands
 }

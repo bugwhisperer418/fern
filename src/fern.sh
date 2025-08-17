@@ -47,7 +47,7 @@ main() {
 		fi
 		if [ ! -e "${wl}" ]; then
 			print_err "Error: The required 'weekly.log' template file does not exist! Please create one at '$wl' and then try again.";
-		fi	
+		fi
 		decipher_request "${@}";
 	fi
 	exit 0;
@@ -117,7 +117,7 @@ usage_lite() {
 }
 
 usage_indepth() {
-	printf "USAGE:\n  fern COMMAND [ACTION [ARGS...]]\n\nCOMMANDS:\n  help\t\t\t\t\t\t\tdisplay Fern help\n\n  vault create <path>\t\t\t\t\tsetup a new Fern Vault\n  vault stat\t\t\t\t\t\tget stats of Fern Vault\n\n  bookmark list\t\t\t\t\t\tlist out all Bookmarks\n  bookmark add <note_name>\t\t\t\tadd a note to Bookmarks\n  bookmark del <note_name>\t\t\t\tremove a note from Bookmarks\n\n  journal\t\t\t\t\t\topens today's weekly Journal log\n  journal open <{this|next|last}-{week|month|year}>\topen commonly accessed Journal log\n  journal open <YYYY-MM-DD>\t\t\t\topen a specific Journal log\n  journal find <pattern>\t\t\t\tsearch Journals for matching pattern\n\n  note add <note> [<template>]\t\t\t\tadd a new Note\n  note del <note>\t\t\t\t\tdelete a Note\n  note open <note>\t\t\t\t\topen a Note\n  note move <old_note> <new_note>\t\t\tmove/rename a Note\n  note find <pattern>\t\t\t\t\tsearch Notes for matching pattern\n\n  template list\t\t\t\t\t\tget list of Template files\n  template add <template>\t\t\t\tadd a new Template\n  template del <template>\t\t\t\tdelete a Template\n  template open <template>\t\t\t\topen a Template\n  template move <old_template> <new_template>\t\tmove/rename a Template\n\nFor more in-depth documentation and advanced usage see the fern(1) manpage (\"man fern\") and/or https://sr.ht/~bugwhisperer/fern/\n";
+	printf "USAGE:\n  fern COMMAND [ACTION [ARGS...]]\n\nCOMMANDS:\n  help\t\t\t\t\t\t\tdisplay Fern help\n\n  vault create <path>\t\t\t\t\tsetup a new Fern Vault\n  vault stat\t\t\t\t\t\tget stats of Fern Vault\n\n  bookmark list\t\t\t\t\t\tlist out all Bookmarks\n  bookmark add <note_name>\t\t\t\tadd a note to Bookmarks\n  bookmark del <note_name>\t\t\t\tremove a note from Bookmarks\n\n  find <pattern> [--verbose|-v] [--quiet|-q] [--notes|-n] [--journals|-j]\tsearch Notes and Journals for matching pattern (interactive by default)\n\n  journal\t\t\t\t\t\topens today's weekly Journal log\n  journal open <{this|next|last}-{week|month|year}>\topen commonly accessed Journal log\n  journal open <YYYY-MM-DD>\t\t\t\topen a specific Journal log\n  journal find <pattern> [--verbose|--quiet]\t\tsearch Journals for matching pattern\n\n  note add <note> [<template>]\t\t\t\tadd a new Note\n  note del <note>\t\t\t\t\tdelete a Note\n  note open <note>\t\t\t\t\topen a Note\n  note move <old_note> <new_note>\t\t\tmove/rename a Note\n  note find <pattern> [--verbose|--quiet]\t\tsearch Notes for matching pattern\n\n  template list\t\t\t\t\t\tget list of Template files\n  template add <template>\t\t\t\tadd a new Template\n  template del <template>\t\t\t\tdelete a Template\n  template open <template>\t\t\t\topen a Template\n  template move <old_template> <new_template>\t\tmove/rename a Template\n\nFor more in-depth documentation and advanced usage see the fern(1) manpage (\"man fern\") and/or https://sr.ht/~bugwhisperer/fern/\n";
 }
 
 cmd_usage() {
@@ -128,11 +128,14 @@ cmd_usage() {
 	bookmark)
 		printf "Usage:\n  fern bookmark list\n  fern bookmark add|del <note_name>\n";
 		;;
+	find)
+		printf "Usage:\n  fern find <pattern> [--verbose|-v] [--quiet|-q] [--notes|-n] [--journals|-j]\n  Search Notes and Journals for matching pattern.\n  Default: interactive file selection from search results\n  --verbose|-v: show matching lines with context (disables interactive mode)\n  --quiet|-q: show file list without interactive selection\n  --notes|-n: search only Notes\n  --journals|-j: search only Journals\n";
+		;;
 	journal)
-		printf "Usage:\n  fern journal\n  fern journal open <{this|next|last}-{week|month|year}>\n  fern journal open <YYYY-MM-DD>\n  fern journal find <search_pattern> [--verbose]\n";
+		printf "Usage:\n  fern journal\n  fern journal open <{this|next|last}-{week|month|year}>\n  fern journal open <YYYY-MM-DD>\n  fern journal find <search_pattern> [--verbose|--quiet]\n";
 		;;
 	note)
-		printf "Usage:\n  fern note\n  fern note del|open <note_name>\n  fern note add <note_name> [<template_name>]\n  fern note find <search_pattern> [--verbose]\n  fern note move <old_note> <new_note>\n  fern note append <template_name> [<note_name>]\n";
+		printf "Usage:\n  fern note\n  fern note del|open <note_name>\n  fern note add <note_name> [<template_name>]\n  fern note find <search_pattern> [--verbose|--quiet]\n  fern note move <old_note> <new_note>\n  fern note append <template_name> [<note_name>]\n";
 		;;
 	template)
 		printf "Usage:\n  fern template list\n  fern template add|del|open <template_name>\n  fern template move <old_template> <new_template>\n";
@@ -158,6 +161,9 @@ decipher_request() {
 		;;
 	template)
 		process_template "$@";
+		;;
+	find)
+		process_find "$@";
 		;;
 	*)
 		printf "Usage: Invalid command - '%s'. See \"fern help\" or the manpage (\"man fern\") for guidance.\n" "$1";
@@ -399,7 +405,9 @@ process_note() {
 				exit 0;
 			elif [ "$lines" -gt 1 ]; then
 				# if more than 1 record, display possible files of interest to user
-				printf "Several possible files of interest were found:\n%s\n" "$hits";
+				local display_hits
+				display_hits=$(strip_vault_prefix "$hits")
+				printf "Several possible files of interest were found:\n%s\n" "$display_hits";
 			fi
 			exit 1;
 		fi
@@ -463,6 +471,78 @@ process_note() {
 		cmd_usage "$1";
 		;;
 	esac
+}
+
+# $1 - command; $2+ - arguments (pattern and flags);
+process_find() {
+	if [ "$#" -lt 2 ]; then cmd_usage "$1"; fi
+
+	local pattern=""
+	local verbose=false
+	local interactive=true  # Default to interactive for user commands
+	local search_notes=false
+	local search_journals=false
+
+	# Parse arguments
+	shift # remove 'find' command
+	while [ "$#" -gt 0 ]; do
+		case "$1" in
+		--verbose|-v)
+			verbose=true
+			interactive=false  # verbose output incompatible with interactive
+			;;
+		--quiet|-q)
+			interactive=false
+			;;
+		--notes|-n)
+			search_notes=true
+			;;
+		--journals|-j)
+			search_journals=true
+			;;
+		*)
+			if [ -z "$pattern" ]; then
+				pattern="$1"
+			else
+				cmd_usage "find"
+			fi
+			;;
+		esac
+		shift
+	done
+
+	if [ -z "$pattern" ]; then
+		cmd_usage "find"
+	fi
+
+	# Default: search both if no specific flags were passed
+	if [ "$search_notes" = false ] && [ "$search_journals" = false ]; then
+		search_notes=true
+		search_journals=true
+	fi
+
+	# Build search directories array
+	local search_dirs=()
+	if [ "$search_notes" = true ]; then
+		search_dirs+=("$fNotes")
+	fi
+	if [ "$search_journals" = true ]; then
+		search_dirs+=("$fJournals")
+	fi
+
+	# Execute search
+	if [ "$interactive" = true ]; then
+		# Capture file list for interactive selection
+		local results
+		results=$(find "${search_dirs[@]}" -regex ".*\.\(md\|log\)" -exec grep --dereference-recursive --line-number --ignore-case --files-with-matches "$pattern" '{}' \+ 2>/dev/null | sort)
+		interactive_file_selection "$results"
+	elif [ "$verbose" = true ]; then
+		find "${search_dirs[@]}" -regex ".*\.\(md\|log\)" -exec grep --dereference-recursive --line-number --ignore-case "$pattern" '{}' \+ 2>/dev/null | sort | less;
+	else
+		local results
+		results=$(find "${search_dirs[@]}" -regex ".*\.\(md\|log\)" -exec grep --dereference-recursive --line-number --ignore-case --files-with-matches "$pattern" '{}' \+ 2>/dev/null | sort)
+		strip_vault_prefix "$results"
+	fi
 }
 
 # $1 - filename;
@@ -548,13 +628,223 @@ update_internal_links() {
 	sed --in-place "s/$1/$2/g" "$fBookmarks";
 }
 
-# $1 - pattern; $2 - Folder of items to search over; $3 - verbose flag;
+# $1 - pattern; $2 - Folder of items to search over; $3 - optional flag (--verbose or --quiet);
 find_items() {
-	if [ "$#" -eq 3 ] && [ "$3" = "--verbose" ]; then
-		find "$2" -regex ".*\.\(md\|log\)" -exec grep --dereference-recursive --line-number --ignore-case "$1" '{}' \+ | sort | less;
+	local pattern="$1"
+	local search_dir="$2"
+	local flag="${3:-}"
+
+	if [ "$flag" = "--verbose" ]; then
+		find "$search_dir" -regex ".*\.\(md\|log\)" -exec grep --dereference-recursive --line-number --ignore-case "$pattern" '{}' \+ | sort | less;
+	elif [ "$flag" = "--quiet" ]; then
+		local results
+		results=$(find "$search_dir" -regex ".*\.\(md\|log\)" -exec grep --dereference-recursive --line-number --ignore-case --files-with-matches "$pattern" '{}' \+ | sort)
+		strip_vault_prefix "$results"
 	else
-		find "$2" -regex ".*\.\(md\|log\)" -exec grep --dereference-recursive --line-number --ignore-case --files-with-matches "$1" '{}' \+ | sort;
+		# Default: interactive mode
+		local results
+		results=$(find "$search_dir" -regex ".*\.\(md\|log\)" -exec grep --dereference-recursive --line-number --ignore-case --files-with-matches "$pattern" '{}' \+ | sort)
+		interactive_file_selection "$results"
 	fi
+}
+
+# Interactive Utility Functions
+
+# Strip FERN_VAULT prefix from file paths for display
+# $1 - file path or newline-separated list of file paths
+strip_vault_prefix() {
+	if [ -n "$FERN_VAULT" ]; then
+		echo "$1" | sed "s|^$FERN_VAULT/||g"
+	else
+		echo "$1"
+	fi
+}
+
+# Simple yes/no prompt with customizable message
+# $1 - prompt message; Returns: 0 for yes, 1 for no
+prompt_yes_no() {
+	local prompt_msg="$1"
+	printf "%s (y/n): " "$prompt_msg"
+	read -r choice
+	case "$choice" in
+		y|Y|yes|Yes|YES)
+			return 0
+			;;
+		*)
+			return 1
+			;;
+	esac
+}
+
+
+# Interactive file selection and opening with pagination
+# $1 - newline-separated list of file paths
+interactive_file_selection() {
+	local file_list="$1"
+
+	if [ -z "$file_list" ]; then
+		printf "No matching files found.\n"
+		return 1
+	fi
+
+	# Convert to array for numbering
+	local files=()
+	while IFS= read -r line; do
+		[ -n "$line" ] && files+=("$line")
+	done <<< "$file_list"
+
+	local count=${#files[@]}
+
+	if [ "$count" -eq 0 ]; then
+		printf "No matching files found.\n"
+		return 1
+	elif [ "$count" -eq 1 ]; then
+		local display_file
+		display_file=$(strip_vault_prefix "${files[0]}")
+		printf "Found 1 matching file:\n  %s\n\n" "$display_file"
+		if prompt_yes_no "Open this file?"; then
+			printf "Opening: %s\n" "$display_file"
+			open_files "${files[0]}"
+		fi
+	else
+		# Check if we need pagination
+		local terminal_height
+		terminal_height=$(tput lines 2>/dev/null || echo "24")
+		local available_lines=$((terminal_height - 6)) # Reserve lines for header, prompt, etc.
+
+		if [ "$count" -le "$available_lines" ]; then
+			# Show all results at once
+			while true; do
+				printf "\033[2J\033[H"
+				printf "Found %d matching files:\n\n" "$count"
+				for i in "${!files[@]}"; do
+					local display_file
+					display_file=$(strip_vault_prefix "${files[i]}")
+					printf "%2d) %s\n" $((i+1)) "$display_file"
+				done
+
+				# Show prompt and get selection
+				printf "\nEnter the number of the file to open (1-%d), or 'q' to quit: " "$count"
+				read -r choice
+
+				# Validate and open selection
+				if [[ "$choice" =~ ^[0-9]+$ ]]; then
+					if [ "$choice" -ge 1 ] && [ "$choice" -le "$count" ]; then
+						local selected_file="${files[$((choice-1))]}"
+						local display_file
+						display_file=$(strip_vault_prefix "$selected_file")
+						printf "Opening: %s\n" "$display_file"
+						open_files "$selected_file"
+						return 0
+					else
+						printf "Invalid selection. Please enter a number from 1-%d. Press Enter to continue..." "$count"
+						read -r
+					fi
+				elif [ "$choice" = "q" ] || [ "$choice" = "Q" ]; then
+					printf "Cancelled.\n"
+					return 0
+				else
+					printf "Invalid input. Please enter a number (1-%d) or 'q' to quit. Press Enter to continue..." "$count"
+					read -r
+				fi
+			done
+		else
+			# Use pagination for large result sets
+			paginated_file_selection "${files[@]}"
+		fi
+	fi
+}
+
+# Paginated file selection for large result sets
+# $@ - array of file paths
+paginated_file_selection() {
+	local files=("$@")
+	local count=${#files[@]}
+	local terminal_height
+	terminal_height=$(tput lines 2>/dev/null || echo "24")
+	local page_size=$((terminal_height - 8)) # Reserve more lines for navigation
+	local current_page=0
+	local total_pages=$(((count + page_size - 1) / page_size))
+
+	while true; do
+		printf "\033[2J\033[H"
+		local start_idx=$((current_page * page_size))
+		local end_idx=$(((current_page + 1) * page_size))
+		if [ "$end_idx" -gt "$count" ]; then
+			end_idx=$count
+		fi
+
+		printf "Found %d matching files (Page %d/%d):\n\n" "$count" $((current_page + 1)) "$total_pages"
+
+		# Show files for current page
+		for i in $(seq $start_idx $((end_idx - 1))); do
+			local display_file
+			display_file=$(strip_vault_prefix "${files[i]}")
+			printf "%2d) %s\n" $((i + 1)) "$display_file"
+		done
+
+		# Build navigation options dynamically
+		local nav_options=""
+		if [ $((current_page + 1)) -lt "$total_pages" ]; then
+			nav_options="[n]ext page"
+		fi
+		if [ "$current_page" -gt 0 ]; then
+			if [ -n "$nav_options" ]; then
+				nav_options="$nav_options, [p]revious page"
+			else
+				nav_options="[p]revious page"
+			fi
+		fi
+		if [ -n "$nav_options" ]; then
+			nav_options="$nav_options, "
+		fi
+		nav_options="${nav_options}[q]uit"
+
+		printf "\nNavigation: %s\n" "$nav_options"
+		printf "Enter file number (%d-%d) to open, or navigation command: " $((start_idx + 1)) "$end_idx"
+		read -r choice
+
+		case "$choice" in
+			n|N|next)
+				if [ $((current_page + 1)) -lt "$total_pages" ]; then
+					current_page=$((current_page + 1))
+				else
+					printf "Already on last page. Press Enter to continue..."
+					read -r
+				fi
+				;;
+			p|P|prev|previous)
+				if [ "$current_page" -gt 0 ]; then
+					current_page=$((current_page - 1))
+				else
+					printf "Already on first page. Press Enter to continue..."
+					read -r
+				fi
+				;;
+			q|Q|quit)
+				return 0
+				;;
+			*)
+				if [[ "$choice" =~ ^[0-9]+$ ]]; then
+					# Only accept numbers from the current page
+					if [ "$choice" -ge $((start_idx + 1)) ] && [ "$choice" -le "$end_idx" ]; then
+						local selected_file="${files[$((choice-1))]}"
+						local display_file
+						display_file=$(strip_vault_prefix "$selected_file")
+						printf "Opening: %s\n" "$display_file"
+						open_files "$selected_file"
+						return 0
+					else
+						printf "Please enter a number from %d-%d for files on this page. Press Enter to continue..." $((start_idx + 1)) "$end_idx"
+						read -r
+					fi
+				else
+					printf "Invalid input. Press Enter to continue..."
+					read -r
+				fi
+				;;
+		esac
+	done
 }
 
 # $1 - Error message to print;

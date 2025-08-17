@@ -49,6 +49,23 @@ Get a list of stats for Fern Vault like qty of records per area.
 .RE
 
 .SS
+.I find
+Search across both Notes and Journals for matching patterns.
+.TP
+.B ACTIONS
+.TP
+<pattern> [--verbose|-v] [--quiet|-q] [--notes|-n] [--journals|-j]
+.RS
+Searches through both Notes and Journals for matches to a given RegEx pattern.
+By default, provides interactive file selection from search results.
+The '--verbose' or '-v' flag shows matching lines with context and disables interactive mode.
+The '--quiet' or '-q' flag shows file list without interactive selection.
+The '--notes' or '-n' flag restricts search to Notes only.
+The '--journals' or '-j' flag restricts search to Journals only.
+If neither '--notes' nor '--journals' is specified, both are searched.
+.RE
+
+.SS
 .I bookmark
 View and manage Bookmarks of Notes.
 .TP
@@ -102,11 +119,12 @@ Opens the previous month's Journal logs (monthly log and all weekly logs from th
 .RE
 
 .TP
-find <pattern> [--verbose]
+find <pattern> [--verbose|--quiet]
 .RS
 Searches through Journal entries for matches to a given RegEx pattern.
-The '--verbose' flag returns Journal snippets that matched, along with the filenames.
-Default is to only return filenames.
+By default, provides interactive file selection from search results.
+The '--verbose' flag shows matching lines with context and disables interactive mode.
+The '--quiet' flag shows file list without interactive selection.
 .RE
 
 .SS
@@ -145,11 +163,12 @@ This was done a safety to keep users from accidentily overwriting notes.
 .RE
 
 .TP
-find <pattern> [--verbose]
+find <pattern> [--verbose|--quiet]
 .RS
 Find Notes based on matching the provided search pattern (accepts RegEx).
-The '--verbose' flag returns Note snippets that matched, along with the filenames.
-Default is to only return filenames.
+By default, provides interactive file selection from search results.
+The '--verbose' flag shows matching lines with context and disables interactive mode.
+The '--quiet' flag shows file list without interactive selection.
 .RE
 
 .TP

@@ -9,7 +9,7 @@ _fern_completion() {
     _init_completion || return
 
     # all commands
-    local commands="help vault bookmark journal note template"
+    local commands="help vault bookmark journal note template find"
     # various Command Actions
     local vault_actions="create stat"
     local bookmark_actions="list add del"

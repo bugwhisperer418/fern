@@ -11,6 +11,7 @@ complete -c fern -f -n '__fish_use_subcommand' -a 'bookmark' -d 'Bookmark manage
 complete -c fern -f -n '__fish_use_subcommand' -a 'journal' -d 'Journal operations'
 complete -c fern -f -n '__fish_use_subcommand' -a 'note' -d 'Note management'
 complete -c fern -f -n '__fish_use_subcommand' -a 'template' -d 'Template management'
+complete -c fern -f -n '__fish_use_subcommand' -a 'find' -d 'Find across all content'
 
 # Vault subcommands
 complete -c fern -f -n '__fish_seen_subcommand_from vault' -a 'create' -d 'Create a new vault'
