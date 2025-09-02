@@ -55,7 +55,7 @@ _fern_subcommands() {
       journal_actions=(
         'open:Open journal entry'
         'find:Find journal entries'
-        'review:Review journal entries'
+        'review:Review period of journal entries'
       )
       _describe 'journal actions' journal_actions
       ;;
@@ -101,6 +101,13 @@ _fern_third_level() {
           'next-year:Next year journal'
         )
         _describe 'journal dates' journal_dates
+      elif [[ $words[3] == "review" ]]; then
+        local journal_review_periods
+        journal_review_periods=(
+          'month:Previous month and all contained weeks journals'
+          'year:Previous year and all contained months journals'
+        )
+        _describe 'journal review periods' journal_review_periods
       fi
       ;;
     bookmark)

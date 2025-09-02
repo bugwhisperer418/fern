@@ -18,6 +18,7 @@ _fern_completion() {
     local template_actions="list add del open move"
     # Journal Command date options
     local journal_dates="last-week this-week next-week last-month this-month next-month last-year this-year next-year"
+    local journal_review_periods="month year"
 
     case $cword in
         1)
@@ -50,6 +51,8 @@ _fern_completion() {
                 journal)
                     if [[ "${words[2]}" == "open" ]]; then
                         COMPREPLY=($(compgen -W "$journal_dates" -- "$cur"))
+                    elif [[ "${words[2]}" == "review" ]]; then
+                        COMPREPLY=($(compgen -W "$journal_review_periods" -- "$cur"))
                     fi
                     ;;
                 bookmark)

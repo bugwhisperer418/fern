@@ -42,15 +42,19 @@ complete -c fern -f -n '__fish_seen_subcommand_from template' -a 'open' -d 'Open
 complete -c fern -f -n '__fish_seen_subcommand_from template' -a 'move' -d 'Move a template'
 
 # Journal date options for 'journal open'
-complete -c fern -f -n '__fish_seen_subcommand_from journal; and __fish_seen_subcommand_from open' -a 'last-week' -d 'Last week journal'
-complete -c fern -f -n '__fish_seen_subcommand_from journal; and __fish_seen_subcommand_from open' -a 'this-week' -d 'This week journal'
-complete -c fern -f -n '__fish_seen_subcommand_from journal; and __fish_seen_subcommand_from open' -a 'next-week' -d 'Next week journal'
-complete -c fern -f -n '__fish_seen_subcommand_from journal; and __fish_seen_subcommand_from open' -a 'last-month' -d 'Last month journal'
-complete -c fern -f -n '__fish_seen_subcommand_from journal; and __fish_seen_subcommand_from open' -a 'this-month' -d 'This month journal'
-complete -c fern -f -n '__fish_seen_subcommand_from journal; and __fish_seen_subcommand_from open' -a 'next-month' -d 'Next month journal'
-complete -c fern -f -n '__fish_seen_subcommand_from journal; and __fish_seen_subcommand_from open' -a 'last-year' -d 'Last year journal'
-complete -c fern -f -n '__fish_seen_subcommand_from journal; and __fish_seen_subcommand_from open' -a 'this-year' -d 'This year journal'
-complete -c fern -f -n '__fish_seen_subcommand_from journal; and __fish_seen_subcommand_from open' -a 'next-year' -d 'Next year journal'
+complete -c fern -f -n '__fish_seen_subcommand_from journal; and __fish_seen_subcommand_from open' -a 'last-week'
+complete -c fern -f -n '__fish_seen_subcommand_from journal; and __fish_seen_subcommand_from open' -a 'this-week'
+complete -c fern -f -n '__fish_seen_subcommand_from journal; and __fish_seen_subcommand_from open' -a 'next-week'
+complete -c fern -f -n '__fish_seen_subcommand_from journal; and __fish_seen_subcommand_from open' -a 'last-month'
+complete -c fern -f -n '__fish_seen_subcommand_from journal; and __fish_seen_subcommand_from open' -a 'this-month'
+complete -c fern -f -n '__fish_seen_subcommand_from journal; and __fish_seen_subcommand_from open' -a 'next-month'
+complete -c fern -f -n '__fish_seen_subcommand_from journal; and __fish_seen_subcommand_from open' -a 'last-year'
+complete -c fern -f -n '__fish_seen_subcommand_from journal; and __fish_seen_subcommand_from open' -a 'this-year'
+complete -c fern -f -n '__fish_seen_subcommand_from journal; and __fish_seen_subcommand_from open' -a 'next-year'
+
+# Journal period options for 'journal review'
+complete -c fern -f -n '__fish_seen_subcommand_from journal; and __fish_seen_subcommand_from review' -a 'month'
+complete -c fern -f -n '__fish_seen_subcommand_from journal; and __fish_seen_subcommand_from review' -a 'year'
 
 # Function to complete note names from vault
 function __fern_complete_notes
@@ -80,5 +84,3 @@ complete -c fern -f -n '__fish_seen_subcommand_from template; and __fish_seen_su
 complete -c fern -f -n '__fish_seen_subcommand_from template; and __fish_seen_subcommand_from del' -a '(__fern_complete_templates)'
 complete -c fern -f -n '__fish_seen_subcommand_from template; and __fish_seen_subcommand_from move' -a '(__fern_complete_templates)'
 
-# Complete template names for note add (fourth argument)
-complete -c fern -f -n '__fish_seen_subcommand_from note; and __fish_seen_subcommand_from add' -a '(__fern_complete_templates)'
