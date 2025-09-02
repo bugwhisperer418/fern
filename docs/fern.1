@@ -109,22 +109,24 @@ Options include: this-week, next-week, last-week, this-month, next-month, last-m
 .TP
 open <YYYY-MM-DD>
 .RS
-Opens a weekly Journal entry for the week containing the specified date.
+Opens a weekly Journal log file for the week containing the specified date. If it does not exist, a new log is created for that week in question.
 .RE
 
 .TP
-review
+review <month|year>
 .RS
-Opens the previous month's Journal logs (monthly log and all weekly logs from that month) for review.
+Opens all of the previous month's Journal logs (monthly log and all weekly logs from that month) or year's (future log & all monthly logs for that year) for review and reflection.
 .RE
 
 .TP
-find <pattern> [--verbose|--quiet]
+find <pattern> [--verbose|--quiet] [--journal|--note]
 .RS
 Searches through Journal entries for matches to a given RegEx pattern.
-By default, provides interactive file selection from search results.
+By default, it provides interactive file selection from the search results file list. If only a single file result is returned, it will open that file without prompting.
 The '--verbose' flag shows matching lines with context and disables interactive mode.
 The '--quiet' flag shows file list without interactive selection.
+The '--journal' flag restricts to only Journal log files.
+The '--note' flag restricts to only Note files.
 .RE
 
 .SS

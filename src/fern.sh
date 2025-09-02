@@ -8,7 +8,7 @@ set -o nounset;		# abort on unbound variable
 #}}}
 
 #{{{ Variables
-fVersion="0.1.7";
+fVersion="0.2.1";
 readonly fVersion;
 
 if [[ ${FERN_VAULT:-"unset"} != "unset" ]]; then
@@ -80,29 +80,23 @@ default_editor() {
 	echo "$editor";
 }
 
-# open file(s) in an editor
-# $1 - file(s) [string]
-# $2 - multiple files flag [bool]
+# open N file(s) in an editor, passed a list of files
+# $@ - [file1, ..., fileN]
 open_files() {
 	local editor
 	editor=$(default_editor);
-	local multi_file=${2-false};
-	if [ "$multi_file" == true ]; then
-		# check if we are dealing with editor that can handle multiple windows
-		if [ "$editor" == "nvim" ] || [ "$editor" == "vim" ] || [ "$editor" == "vi" ]; then
-			exec "$editor" -O "$1";
-			return 0;
-		fi
-	fi
+	# if we are dealing with editor that can handle multiple windows, assume there's mutiple files
+	if [ "$editor" == "nvim" ] || [ "$editor" == "vim" ] || [ "$editor" == "vi" ]; then
+		exec "$editor" -O "$@";
 	# special open commands for some editors
-	if [ "$editor" == "kate" ]; then
-		exec "$editor" -b "$1";
+	elif [ "$editor" == "kate" ]; then
+		exec "$editor" -b "$@";
 	elif [ "$editor" == "code" ]; then
-		exec "$editor" -n "$1";
+		exec "$editor" -n "$@";
 	else
 		# covers all other editors for multi-files
 		# & also covers all single file openings
-		exec "$editor" "$1";
+		exec "$editor" "$@";
 	fi
 	return 0;
 }
@@ -117,7 +111,7 @@ usage_lite() {
 }
 
 usage_indepth() {
-	printf "USAGE:\n  fern COMMAND [ACTION [ARGS...]]\n\nCOMMANDS:\n  help\t\t\t\t\t\t\tdisplay Fern help\n\n  vault create <path>\t\t\t\t\tsetup a new Fern Vault\n  vault stat\t\t\t\t\t\tget stats of Fern Vault\n\n  bookmark list\t\t\t\t\t\tlist out all Bookmarks\n  bookmark add <note_name>\t\t\t\tadd a note to Bookmarks\n  bookmark del <note_name>\t\t\t\tremove a note from Bookmarks\n\n  find <pattern> [--verbose|-v] [--quiet|-q] [--notes|-n] [--journals|-j]\tsearch Notes and Journals for matching pattern (interactive by default)\n\n  journal\t\t\t\t\t\topens today's weekly Journal log\n  journal open <{this|next|last}-{week|month|year}>\topen commonly accessed Journal log\n  journal open <YYYY-MM-DD>\t\t\t\topen a specific Journal log\n  journal find <pattern> [--verbose|--quiet]\t\tsearch Journals for matching pattern\n\n  note add <note> [<template>]\t\t\t\tadd a new Note\n  note del <note>\t\t\t\t\tdelete a Note\n  note open <note>\t\t\t\t\topen a Note\n  note move <old_note> <new_note>\t\t\tmove/rename a Note\n  note find <pattern> [--verbose|--quiet]\t\tsearch Notes for matching pattern\n\n  template list\t\t\t\t\t\tget list of Template files\n  template add <template>\t\t\t\tadd a new Template\n  template del <template>\t\t\t\tdelete a Template\n  template open <template>\t\t\t\topen a Template\n  template move <old_template> <new_template>\t\tmove/rename a Template\n\nFor more in-depth documentation and advanced usage see the fern(1) manpage (\"man fern\") and/or https://sr.ht/~bugwhisperer/fern/\n";
+	printf "USAGE:\n  fern COMMAND [ACTION [ARGS...]]\n\nCOMMANDS:\n  help\t\t\t\t\t\t\tdisplay Fern help\n\n  vault create <path>\t\t\t\t\tsetup a new Fern Vault\n  vault stat\t\t\t\t\t\tget stats of Fern Vault\n\n  bookmark list\t\t\t\t\t\tlist out all Bookmarks\n  bookmark add <note_name>\t\t\t\tadd a note to Bookmarks\n  bookmark del <note_name>\t\t\t\tremove a note from Bookmarks\n\n  find <pattern> [--verbose|-v] [--quiet|-q] [--notes|-n] [--journals|-j]\tsearch Notes and Journals for matching pattern (interactive by default)\n\n  journal\t\t\t\t\t\topens today's weekly Journal log\n  journal open <{this|next|last}-{week|month|year}>\topen commonly accessed Journal log\n  journal open <YYYY-MM-DD>\t\t\t\topen a specific Journal log\n  journal find <pattern> [--verbose|--quiet]\t\tsearch Journals for matching pattern\n  journal review <month|year>\t\t\t\topen Journal logs for year|month to review/reflect\n\n  note add <note> [<template>]\t\t\t\tadd a new Note\n  note del <note>\t\t\t\t\tdelete a Note\n  note open <note>\t\t\t\t\topen a Note\n  note move <old_note> <new_note>\t\t\tmove/rename a Note\n  note find <pattern> [--verbose|--quiet]\t\tsearch Notes for matching pattern\n\n  template list\t\t\t\t\t\tget list of Template files\n  template add <template>\t\t\t\tadd a new Template\n  template del <template>\t\t\t\tdelete a Template\n  template open <template>\t\t\t\topen a Template\n  template move <old_template> <new_template>\t\tmove/rename a Template\n\nFor more in-depth documentation and advanced usage see the fern(1) manpage (\"man fern\") and/or https://sr.ht/~bugwhisperer/fern/\n";
 }
 
 cmd_usage() {
@@ -132,7 +126,7 @@ cmd_usage() {
 		printf "Usage:\n  fern find <pattern> [--verbose|-v] [--quiet|-q] [--notes|-n] [--journals|-j]\n  Search Notes and Journals for matching pattern.\n  Default: interactive file selection from search results\n  --verbose|-v: show matching lines with context (disables interactive mode)\n  --quiet|-q: show file list without interactive selection\n  --notes|-n: search only Notes\n  --journals|-j: search only Journals\n";
 		;;
 	journal)
-		printf "Usage:\n  fern journal\n  fern journal open <{this|next|last}-{week|month|year}>\n  fern journal open <YYYY-MM-DD>\n  fern journal find <search_pattern> [--verbose|--quiet]\n";
+		printf "Usage:\n  fern journal\n  fern journal open <{this|next|last}-{week|month|year}>\n  fern journal open <YYYY-MM-DD>\n  fern journal find <search_pattern> [--verbose|--quiet]\n  fern journal review <month|year>\n";
 		;;
 	note)
 		printf "Usage:\n  fern note\n  fern note del|open <note_name>\n  fern note add <note_name> [<template_name>]\n  fern note find <search_pattern> [--verbose|--quiet]\n  fern note move <old_note> <new_note>\n  fern note append <template_name> [<note_name>]\n";
@@ -303,29 +297,38 @@ process_template() {
 process_journal() {
 	if [ "$#" -eq 1 ]; then
 		# shortcut to create/open a new weekly journal for today's date
-		open_weekly_journal "$(date +"%Y-%m-%d")";
+		open_weekly_log "$(date +"%Y-%m-%d")";
 	elif [ "$#" -lt 2 ]; then
 		cmd_usage "$1";
 	fi
 	case "$2" in
 	review)
-		# open previous monthly log & all of it's weekly logs
-		local dt_start
-		dt_start=$(date --date="1 month ago" +"%Y-%m-01")
-		local dt_end
-		dt_end=$(date --date="$dt_start +1 months -1 days" +"%Y-%m-%d")
-		local files
-		files="$fJournals/$(date -d "$dt_start" +"%Y/%m")/monthly.log"
-		while [[ "$dt_start" < "$dt_end" ]]; do
-			# get the monday of the week
-			local monday
-			monday=$(get_week_monday "$(date --date="$dt_start" +"%Y-%m-%d")")
-			# add week log file to string
-			files="$files $fJournals/$(date -d "$monday" +"%Y/%m/wk%V").log";
-			# set start date to next week
-			dt_start=$(date --date="$dt_start +1 weeks" +"%Y-%m-%d")
-		done
-		open_files "$files" true;
+		if [ "$#" -ne 3 ]; then
+			cmd_usage "$1";
+		fi
+		case "$3" in
+		month)
+			# open previous monthly log & all of it's weekly logs
+			local dt_start
+			dt_start=$(date --date="1 month ago" +"%Y-%m-01")
+			local files
+			files="$fJournals/$(date --date="$dt_start" +"%Y/%m")/*.log"
+			open_files $files;
+			;;
+		year)
+			# open previous year's future log and all of last year's monthly logs
+			local dt_start
+			dt_start=$(date --date="1 year ago" +"%Y-01-01")
+			local yearFile
+			yearFile="$fJournals/$(date --date="$dt_start" +"%Y")/future.log"
+			local monthFiles
+			monthFiles="$fJournals/$(date --date="$dt_start" +"%Y")/*/monthly.log"
+			open_files $yearFile $monthFiles;
+			;;
+		*)
+			printf "Usage: fern journal review <month|year>\n";
+			;;
+		esac
 		;;
 	open)
 		if [ "$#" -ne 3 ]; then
@@ -333,37 +336,37 @@ process_journal() {
 		fi
 		case "$3" in
 		last-week)
-			open_weekly_journal "$(date --date="1 week ago" +"%Y-%m-%d")";
+			open_weekly_log "$(date --date="1 week ago" +"%Y-%m-%d")";
 			;;
 		this-week)
-			open_weekly_journal "$(date +"%Y-%m-%d")";
+			open_weekly_log "$(date +"%Y-%m-%d")";
 			;;
 		next-week)
-			open_weekly_journal "$(date --date="1 week" +"%Y-%m-%d")";
+			open_weekly_log "$(date --date="1 week" +"%Y-%m-%d")";
 			;;
 		last-month)
-			open_monthly_journal "$(date --date="1 month ago" +"%Y-%m-%d")";
+			open_monthly_log "$(date --date="1 month ago" +"%Y-%m-%d")";
 			;;
 		this-month)
-			open_monthly_journal "$(date +"%Y-%m-%d")";
+			open_monthly_log "$(date +"%Y-%m-%d")";
 			;;
 		next-month)
-			open_monthly_journal "$(date --date="1 month" +"%Y-%m-%d")";
+			open_monthly_log "$(date --date="1 month" +"%Y-%m-%d")";
 			;;
 		last-year)
-			open_yearly_journal "$(date --date="1 year ago" +"%Y-%m-%d")";
+			open_yearly_log "$(date --date="1 year ago" +"%Y-%m-%d")";
 			;;
 		this-year)
-			open_yearly_journal "$(date +"%Y-%m-%d")";
+			open_yearly_log "$(date +"%Y-%m-%d")";
 			;;
 		next-year)
-			open_yearly_journal "$(date --date="1 year" +"%Y-%m-%d")";
+			open_yearly_log "$(date --date="1 year" +"%Y-%m-%d")";
 			;;
 		*)
 			if date -d "$3" "+%Y-%m-%d" >/dev/null 2>&1; then
-				open_weekly_journal "$3";
+				open_weekly_log "$3";
 			else
-				printf "Usage: fern journal open <{this|next|last}-{week|month|year}>|<YYYY-MM-DD>";
+				printf "Usage: fern journal open <{this|next|last}-{week|month|year}>|<YYYY-MM-DD>\n";
 			fi
 			;;
 		esac
@@ -565,7 +568,7 @@ get_week_monday() {
 }
 
 # $1 - journal date;
-open_yearly_journal() {
+open_yearly_log() {
 	local yr
 	yr=$(date -d "$1" +"%Y")
 	# ensure year folder exists
@@ -580,7 +583,7 @@ open_yearly_journal() {
 }
 
 # $1 - journal date;
-open_monthly_journal() {
+open_monthly_log() {
 	local yr
 	yr=$(date -d "$1" +"%Y")
 	local mnth
@@ -599,7 +602,7 @@ open_monthly_journal() {
 }
 
 # $1 - journal date;
-open_weekly_journal() {
+open_weekly_log() {
 	local monday
 	monday=$(get_week_monday "$1")
 	local mnth
@@ -615,6 +618,7 @@ open_weekly_journal() {
 	if [ ! -e "$target" ]; then
 		cp "$wl" "$target";
 		sed --in-place "s/{{WEEKNO}}/$wk/g" "$target";
+		sed --in-place "s/{{YEAR}}/$yr/g" "$target";
 	fi
 	open_files "$target";
 }
