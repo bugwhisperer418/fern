@@ -297,8 +297,10 @@ process_template() {
 process_journal() {
 	if [ "$#" -eq 1 ]; then
 		# shortcut to create/open a new weekly journal for today's date
-		open_weekly_log "$(date +"%Y-%m-%d")";
-	elif [ "$#" -lt 2 ]; then
+		local log
+		log=$(get_weekly_log "$(date +"%Y-%m-%d")");
+		open_files $log
+	else
 		cmd_usage "$1";
 	fi
 	case "$2" in
@@ -334,42 +336,45 @@ process_journal() {
 		if [ "$#" -ne 3 ]; then
 			cmd_usage "$1";
 		fi
+		local log
 		case "$3" in
 		last-week)
-			open_weekly_log "$(date --date="1 week ago" +"%Y-%m-%d")";
+			log=$(get_weekly_log "$(date --date="1 week ago" +"%Y-%m-%d")");
 			;;
 		this-week)
-			open_weekly_log "$(date +"%Y-%m-%d")";
+			log=$(get_weekly_log "$(date +"%Y-%m-%d")");
 			;;
 		next-week)
-			open_weekly_log "$(date --date="1 week" +"%Y-%m-%d")";
+			log=$(get_weekly_log "$(date --date="1 week" +"%Y-%m-%d")");
 			;;
 		last-month)
-			open_monthly_log "$(date --date="1 month ago" +"%Y-%m-%d")";
+			log=$(get_monthly_log "$(date --date="1 month ago" +"%Y-%m-%d")");
 			;;
 		this-month)
-			open_monthly_log "$(date +"%Y-%m-%d")";
+			log=$(get_monthly_log "$(date +"%Y-%m-%d")");
 			;;
 		next-month)
-			open_monthly_log "$(date --date="1 month" +"%Y-%m-%d")";
+			log=$(get_monthly_log "$(date --date="1 month" +"%Y-%m-%d")");
 			;;
 		last-year)
-			open_yearly_log "$(date --date="1 year ago" +"%Y-%m-%d")";
+			log=$(get_yearly_log "$(date --date="1 year ago" +"%Y-%m-%d")");
 			;;
 		this-year)
-			open_yearly_log "$(date +"%Y-%m-%d")";
+			log=$(get_yearly_log "$(date +"%Y-%m-%d")");
 			;;
 		next-year)
-			open_yearly_log "$(date --date="1 year" +"%Y-%m-%d")";
+			log=$(get_yearly_log "$(date --date="1 year" +"%Y-%m-%d")");
 			;;
 		*)
 			if date -d "$3" "+%Y-%m-%d" >/dev/null 2>&1; then
-				open_weekly_log "$3";
+				log=$(get_weekly_log "$3");
 			else
 				printf "Usage: fern journal open <{this|next|last}-{week|month|year}>|<YYYY-MM-DD>\n";
+				exit 1
 			fi
 			;;
 		esac
+		open_files $log;
 		;;
 	find)
 		if [ "$#" -eq 3 ]; then
@@ -568,7 +573,7 @@ get_week_monday() {
 }
 
 # $1 - journal date;
-open_yearly_log() {
+get_yearly_log() {
 	local yr
 	yr=$(date -d "$1" +"%Y")
 	# ensure year folder exists
@@ -579,11 +584,11 @@ open_yearly_log() {
 		cp "$fl" "$target";
 		sed --in-place "s/{{YEAR}}/$yr/g" "$target";
 	fi
-	open_files "$target";
+	echo "$target";
 }
 
 # $1 - journal date;
-open_monthly_log() {
+get_monthly_log() {
 	local yr
 	yr=$(date -d "$1" +"%Y")
 	local mnth
@@ -598,11 +603,11 @@ open_monthly_log() {
 		sed --in-place "s/{{MONTH}}/$mnth_full/g" "$target";
 		sed --in-place "s/{{YEAR}}/$yr/g" "$target";
 	fi
-	open_files "$target";
+	echo "$target";
 }
 
 # $1 - journal date;
-open_weekly_log() {
+get_weekly_log() {
 	local monday
 	monday=$(get_week_monday "$1")
 	local mnth
@@ -620,7 +625,7 @@ open_weekly_log() {
 		sed --in-place "s/{{WEEKNO}}/$wk/g" "$target";
 		sed --in-place "s/{{YEAR}}/$yr/g" "$target";
 	fi
-	open_files "$target";
+	echo "$target";
 }
 
 # $1 - old name; $2 - new name;
