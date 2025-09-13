@@ -243,13 +243,13 @@ process_bookmark() {
 
 # $1 - action; $2 - template name; $3 - template name;
 process_template() {
-	if [ "$#" -lt 2 ]; then cmd_usage "$1"; fi
-	case "$2" in
-	list)
+	if [ "$#" -eq 2 ] && ["$2" == "list"]; then
 		ls "$fTemplates" -1;
-		;;
+	elif [ "$#" -lt 3 ]; then
+		cmd_usage "$1";
+	fi
+	case "$2" in
 	open)
-		if [ "$#" -lt 3 ]; then cmd_usage "$1"; fi
 		local target
 		target=$(ext_checks "$3");
 		if [ ! -e "$fTemplates/$target" ]; then
@@ -258,7 +258,6 @@ process_template() {
 		open_files "$fTemplates/$target";
 		;;
 	add)
-		if [ "$#" -lt 3 ]; then cmd_usage "$1"; fi
 		local target
 		target=$(ext_checks "$3");
 		if [ -e "$target" ]; then
@@ -267,7 +266,6 @@ process_template() {
 		open_files "$fTemplates/$target";
 		;;
 	del)
-		if [ "$#" -lt 3 ]; then cmd_usage "$1"; fi
 		local target
 		target=$(ext_checks "$3");
 		if [ ! -e "$fTemplates/$target" ]; then
@@ -276,7 +274,6 @@ process_template() {
 		rm -f "$fTemplates/$target";
 		;;
 	move)
-		if [ "$#" -lt 3 ]; then cmd_usage "$1"; fi
 		local oldT
 		oldT=$(ext_checks "$3");
 		if [ "$#" -lt 4 ]; then cmd_usage "$1"; fi
@@ -299,15 +296,11 @@ process_journal() {
 		# shortcut to create/open a new weekly journal for today's date
 		local log
 		log=$(get_weekly_log "$(date +"%Y-%m-%d")");
-		open_files $log
-	else
+	elif [ "$#" -lt 3 ]; then
 		cmd_usage "$1";
 	fi
 	case "$2" in
 	review)
-		if [ "$#" -ne 3 ]; then
-			cmd_usage "$1";
-		fi
 		case "$3" in
 		month)
 			# open previous monthly log & all of it's weekly logs
@@ -333,9 +326,6 @@ process_journal() {
 		esac
 		;;
 	open)
-		if [ "$#" -ne 3 ]; then
-			cmd_usage "$1";
-		fi
 		local log
 		case "$3" in
 		last-week)
@@ -391,38 +381,18 @@ process_journal() {
 
 # $1 - action; $2 - note name | pattern string; $3 - note name | template name;
 process_note() {
-	if [ "$#" -lt 2 ]; then cmd_usage "$1"; fi
+	if [ "$#" -lt 3 ]; then cmd_usage "$1"; fi
 	case "$2" in
 	open)
-		if [ "$#" -lt 3 ]; then cmd_usage "$1"; fi
-		# try to open a note with the exact name provided first
+		# try to open a note with the exact name provided
 		local target
 		target=$(ext_checks "$3");
 		if [ ! -e "$fNotes/$target" ]; then
-			# search for the note by name given in other files
-			local hits
-			hits=$(find_items "$3" "$fNotes");
-			local lines
-			lines=$(echo "$hits" | wc -l);
-			local chars
-			chars=${#hits}
-			printf "Error: Note not found with the name '%s'.\n" "$target";
-			if [ "$lines" -eq 1 ] && [ "$chars" -gt 1 ]; then
-				# if only 1 search record returned, open it
-				open_files "$hits";
-				exit 0;
-			elif [ "$lines" -gt 1 ]; then
-				# if more than 1 record, display possible files of interest to user
-				local display_hits
-				display_hits=$(strip_vault_prefix "$hits")
-				printf "Several possible files of interest were found:\n%s\n" "$display_hits";
-			fi
-			exit 1;
+			print_err "Error: Note not found with the name '$target'.";
 		fi
 		open_files "$fNotes/$target";
 		;;
 	add)
-		if [ "$#" -lt 3 ]; then cmd_usage "$1"; fi
 		local targetF
 		targetF=$(ext_checks "$3");
 		if [ -e "$fNotes/$targetF" ]; then
@@ -441,7 +411,6 @@ process_note() {
 		open_files "$fNotes/$targetF";
 		;;
 	del)
-		if [ "$#" -lt 3 ]; then cmd_usage "$1"; fi
 		local target
 		target=$(ext_checks "$3");
 		if [ -e "$fNotes/$target" ]; then
@@ -452,15 +421,14 @@ process_note() {
 		fi
 		;;
 	move)
-		if [ "$#" -lt 3 ]; then cmd_usage "$1"; fi
 		local targetOld
 		targetOld=$(ext_checks "$3");
-		if [ "$#" -lt 4 ]; then cmd_usage "$1"; fi
-		local targetNew
-		targetNew=$(ext_checks "$4");
 		if [ ! -e "$fNotes/$targetOld" ]; then
 			print_err "Error: Note not found with the name '$targetOld'.";
 		fi
+		if [ "$#" -lt 4 ]; then cmd_usage "$1"; fi
+		local targetNew
+		targetNew=$(ext_checks "$4");
 		if [ -e "$fNotes/$targetNew" ]; then
 			print_err "Error: Note already exists with the name '$targetNew'.";
 		fi
@@ -468,11 +436,12 @@ process_note() {
 		update_internal_links "$targetOld" "$targetNew";
 		;;
 	find)
-		if [ "$#" -lt 3 ]; then cmd_usage "$1";
-		elif [ "$#" -eq 3 ]; then
+		if [ "$#" -eq 3 ]; then
 			find_items "$3" "$fNotes";
 		elif [ "$#" -eq 4 ]; then
 			find_items "$3" "$fNotes" "$4";
+		else
+			cmd_usage "$1";
 		fi
 		;;
 	*)
